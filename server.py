@@ -107,8 +107,6 @@ DOCUMENT_TYPES = [
     "death_certificate",
     "mother_cnic",
     "father_cnic",
-    "address",
-    "mother_education",
 ]
 
 
@@ -208,6 +206,21 @@ async def save_address(full_address: str = Form(...)):
     conn.commit()
 
     return {"document_type": "address", "extracted": result, "timestamp": timestamp}
+
+
+@app.post("/api/save-mother-education")
+async def save_mother_education(education_level: str = Form(...)):
+    """Save the manually-typed mother's education level (no image extraction needed)."""
+    result = {"education_level": education_level}
+
+    timestamp = datetime.now().isoformat()
+    cursor.execute(
+        "INSERT INTO extractions (document_type, extracted_json, timestamp) VALUES (?, ?, ?)",
+        ("mother_education", json.dumps(result, ensure_ascii=False), timestamp),
+    )
+    conn.commit()
+
+    return {"document_type": "mother_education", "extracted": result, "timestamp": timestamp}
 
 
 @app.post("/api/cross-check")

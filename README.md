@@ -222,6 +222,7 @@ python -m pytest test_pipeline.py -v
 ```
 CaseFill-AI/
 ├── frontend/              # React frontend
+│   ├── dist/              # Built frontend (committed)
 │   ├── src/
 │   │   ├── components/    # UI screens and components
 │   │   ├── context/       # React context (CaseContext)
@@ -229,16 +230,30 @@ CaseFill-AI/
 │   │   └── types/         # TypeScript type definitions
 │   ├── vite.config.ts     # Vite config (proxy to backend)
 │   └── package.json
+├── screenshots/           # App screenshots (committed)
 ├── server.py              # FastAPI backend (HTTP endpoints)
 ├── pipeline.py            # AI extraction logic (Qwen-VL)
 ├── schema.json            # Document field schemas
 ├── requirements.txt       # Python dependencies
 ├── API_Key.env            # API keys (included in private repo)
-├── extractions.db         # SQLite database (auto-created)
-├── uploads/               # Uploaded images (auto-created)
+├── extractions.db         # SQLite database (committed)
+├── test_*.png             # Test images (committed)
+├── uploads/               # Uploaded images (gitignored — runtime only)
 ├── build.sh               # Build script for deployment
 └── render.yaml            # Render.com deployment config
 ```
+
+### What's gitignored
+
+Only runtime-generated content is ignored — everything else is tracked:
+
+| Path | Why ignored |
+|------|------------|
+| `uploads/` | User-uploaded images, regenerated every session |
+| `node_modules/` | Installed via `npm install` |
+| `__pycache__/`, `*.pyc` | Python bytecode, auto-generated |
+| `.env` | Local-only env overrides |
+| `.DS_Store`, `Thumbs.db` | OS junk files |
 
 ---
 

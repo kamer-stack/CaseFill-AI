@@ -2,13 +2,14 @@ import { useCallback, useState } from "react"
 import { useCase } from "@/context/CaseContext"
 import { ALL_SLOTS, DOCUMENT_LABELS } from "@/types"
 import type { DocumentSlot } from "@/types"
-import { uploadImage, extractDocument, saveAddress } from "@/lib/api"
+import { uploadImage, extractDocument, saveAddress, saveMotherEducation } from "@/lib/api"
 import { CheckCircle2, XCircle, AlertTriangle, ImagePlus, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export default function UploadScreen() {
   const { state, dispatch } = useCase()
   const [addressText, setAddressText] = useState("")
+  const [motherEducationText, setMotherEducationText] = useState("")
 
   const doneCount = ALL_SLOTS.filter(
     (s) => state.documents[s].status === "done" || state.documents[s].notProvided
@@ -56,6 +57,21 @@ export default function UploadScreen() {
       })
     } catch (e) {
       dispatch({ type: "SET_DOC", slot: "address", patch: { status: "error", error: String(e) } })
+    }
+  }
+
+  const handleMotherEducationSave = async () => {
+    if (!motherEducationText.trim()) return
+    dispatch({ type: "SET_DOC", slot: "mother_education", patch: { status: "uploading" } })
+    try {
+      const res = await saveMotherEducation(motherEducationText.trim())
+      dispatch({
+        type: "SET_DOC",
+        slot: "mother_education",
+        patch: { extracted: res.extracted, status: "done" },
+      })
+    } catch (e) {
+      dispatch({ type: "SET_DOC", slot: "mother_education", patch: { status: "error", error: String(e) } })
     }
   }
 
@@ -115,6 +131,8 @@ export default function UploadScreen() {
           const doc = state.documents[slot]
           const label = DOCUMENT_LABELS[slot]
           const isAddress = slot === "address"
+          const isMotherEducation = slot === "mother_education"
+          const isTextInput = isAddress || isMotherEducation
 
           return (
             <div
@@ -140,30 +158,52 @@ export default function UploadScreen() {
                   <StatusIcon doc={doc} />
                 </div>
 
-                {/* Address special input */}
-                {isAddress ? (
+                {/* Text-based inputs (address & mother's education) */}
+                {isTextInput ? (
                   <div>
                     {doc.status === "done" ? (
                       <div className="bg-primary-50 rounded-lg p-3 text-sm text-primary-dark">
                         <CheckCircle2 className="inline w-4 h-4 mr-1" />
-                        {doc.extracted?.full_address as string}
+                        {isAddress
+                          ? (doc.extracted?.full_address as string)
+                          : (doc.extracted?.education_level as string)}
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <textarea
-                          value={addressText}
-                          onChange={(e) => setAddressText(e.target.value)}
-                          placeholder="Type the full address here..."
-                          rows={2}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none resize-none"
-                        />
+                        {isAddress ? (
+                          <textarea
+                            value={addressText}
+                            onChange={(e) => setAddressText(e.target.value)}
+                            placeholder="Type the full address here..."
+                            rows={2}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none resize-none"
+                          />
+                        ) : (
+                          <select
+                            value={motherEducationText}
+                            onChange={(e) => setMotherEducationText(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"
+                          >
+                            <option value="">Select education level...</option>
+                            <option value="none">None</option>
+                            <option value="primary">Primary</option>
+                            <option value="middle">Middle</option>
+                            <option value="matric">Matric</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="graduate">Graduate</option>
+                            <option value="post-graduate">Post-Graduate</option>
+                          </select>
+                        )}
                         <div className="flex gap-2">
                           <button
-                            onClick={handleAddressSave}
-                            disabled={!addressText.trim() || doc.status === "uploading"}
+                            onClick={isAddress ? handleAddressSave : handleMotherEducationSave}
+                            disabled={
+                              (isAddress ? !addressText.trim() : !motherEducationText.trim()) ||
+                              doc.status === "uploading"
+                            }
                             className="px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark disabled:opacity-40 transition-colors"
                           >
-                            {doc.status === "uploading" ? "Saving..." : "Save Address"}
+                            {doc.status === "uploading" ? "Saving..." : `Save ${isAddress ? "Address" : "Education"}`}
                           </button>
                           <button
                             onClick={() => markNotProvided(slot)}

@@ -67,6 +67,12 @@ export async function saveAddress(fullAddress: string): Promise<ExtractResponse>
   return request<ExtractResponse>("/save-address", { method: "POST", body: fd })
 }
 
+export async function saveMotherEducation(educationLevel: string): Promise<ExtractResponse> {
+  const fd = new FormData()
+  fd.append("education_level", educationLevel)
+  return request<ExtractResponse>("/save-mother-education", { method: "POST", body: fd })
+}
+
 export async function crossCheck(
   documents: Record<string, Record<string, unknown>>,
   targetChildSerialNumber?: number

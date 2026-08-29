@@ -1,29 +1,14 @@
-# Dependencies
+# Runtime uploads (regenerated per session)
+uploads/
+
+# Dependencies (installed via npm install / pip install)
 node_modules/
 __pycache__/
 *.pyc
 
-# Build output
-frontend/dist/
-
-# Uploaded files & database
-uploads/
-extractions.db
-
-# Env files (keep .env local-only; API_Key.env is tracked for team access)
+# Local-only env overrides
 .env
 
-# IDE / OS
-.vscode/
-.idea/
-Thumbs.db
+# OS junk
 .DS_Store
-
-# Temp scripts
-*.bat
-
-# Screenshots (keep locally, don't push large images)
-screenshots/
-
-# Test images (keep locally)
-test_*.png
+Thumbs.db
