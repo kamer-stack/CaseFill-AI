@@ -1,0 +1,94 @@
+{
+  "child_picture": {
+    "quality_check": "string (clear / blurry / face_not_visible)",
+    "confidence": {
+      "quality_check": "number 0-1"
+    }
+  },
+  "result_card": {
+    "child_name": "string",
+    "school_name": "string",
+    "class_grade": "string",
+    "result_percentage_or_grade": "string",
+    "year": "string",
+    "confidence": {
+      "child_name": "number 0-1",
+      "school_name": "number 0-1",
+      "class_grade": "number 0-1",
+      "result_percentage_or_grade": "number 0-1",
+      "year": "number 0-1"
+    }
+  },
+  "b_form": {
+    "crc_number": "string",
+    "applicant_name": "string (usually the father)",
+    "applicant_cnic_number": "string (13 digits, e.g. 00000-0000000-0)",
+    "father_name": "string",
+    "father_cnic_number": "string (13 digits)",
+    "mother_name": "string",
+    "mother_cnic_number": "string (13 digits)",
+    "children": [
+      {
+        "serial_number": "number (row number on the form)",
+        "child_name": "string",
+        "child_registration_number": "string",
+        "gender_relation": "string (e.g. son/daughter)",
+        "date_of_birth": "string (DD-MM-YYYY)",
+        "place_of_birth": "string"
+      }
+    ],
+    "confidence": "object, one score per top-level and per-child field"
+  },
+  "death_certificate": {
+    "deceased_name": "string",
+    "father_or_husband_name": "string",
+    "date_of_death": "string (DD-MM-YYYY)",
+    "registration_number": "string",
+    "issuing_union_council": "string",
+    "confidence": {
+      "deceased_name": "number 0-1",
+      "father_or_husband_name": "number 0-1",
+      "date_of_death": "number 0-1",
+      "registration_number": "number 0-1",
+      "issuing_union_council": "number 0-1"
+    }
+  },
+  "mother_cnic": {
+    "name": "string",
+    "father_or_husband_name": "string",
+    "cnic_number": "string (13 digits)",
+    "date_of_birth": "string (DD-MM-YYYY)",
+    "address": "string (from back of card)",
+    "confidence": {
+      "name": "number 0-1",
+      "father_or_husband_name": "number 0-1",
+      "cnic_number": "number 0-1",
+      "date_of_birth": "number 0-1",
+      "address": "number 0-1"
+    }
+  },
+  "father_cnic": {
+    "name": "string",
+    "father_name": "string",
+    "cnic_number": "string (13 digits)",
+    "date_of_birth": "string (DD-MM-YYYY)",
+    "confidence": {
+      "name": "number 0-1",
+      "father_name": "number 0-1",
+      "cnic_number": "number 0-1",
+      "date_of_birth": "number 0-1"
+    }
+  },
+  "address": {
+    "full_address": "string (typed by FSO, not extracted from a document)"
+  },
+  "mother_education": {
+    "education_level": "string (e.g. none / primary / matric / intermediate / graduate)",
+    "confidence": {
+      "education_level": "number 0-1"
+    }
+  },
+  "_notes": {
+    "b_form_case_scope": "A B-form may list multiple siblings, but each OFSP case is for exactly ONE child. The FSO must select/confirm which listed child this case is for after extraction — the model never decides this."
+  }
+}

@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Build output
+frontend/dist/
+
+# Uploaded files & database
+uploads/
+extractions.db
+
+# API keys — NEVER push secrets
+API_Key.env
+.env
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Temp scripts
+*.bat
+
+# Screenshots (keep locally, don't push large images)
+screenshots/
+
+# Test images (keep locally)
+test_*.png

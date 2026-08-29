@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1a7a4c;
+  --color-primary-light: #22a366;
+  --color-primary-dark: #145e3a;
+  --color-primary-50: #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-confident: #16a34a;
+  --color-review: #ca8a04;
+  --color-missing: #dc2626;
+  --color-match: #16a34a;
+  --color-similar: #ca8a04;
+  --color-mismatch: #dc2626;
+  --font-urdu: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f8faf9;
+  color: #1e293b;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* RTL text blocks — plain flow, no absolute positioning */
+.rtl-text {
+  direction: rtl;
+  text-align: right;
+  font-family: var(--font-urdu);
+  line-height: 2;
+}
