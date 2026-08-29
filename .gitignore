@@ -10,8 +10,7 @@ frontend/dist/
 uploads/
 extractions.db
 
-# API keys — NEVER push secrets
-API_Key.env
+# Env files (keep .env local-only; API_Key.env is tracked for team access)
 .env
 
 # IDE / OS
