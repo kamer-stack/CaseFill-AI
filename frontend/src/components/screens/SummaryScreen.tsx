@@ -11,7 +11,7 @@ export default function SummaryScreen() {
   const [error, setError] = useState<string | null>(null)
 
   const flagsCount = state.crossChecks.filter(
-    (c) => c.status === "MISMATCH" || c.status === "SIMILAR" || c.status === "NEEDS_REVIEW"
+    (c) => c.status === "MISMATCH" || c.status === "SIMILAR" || c.status === "NEEDS_REVIEW" || c.status === "DIFFERENT_SCRIPT"
   ).length
   const isClean = flagsCount === 0
 
@@ -167,7 +167,7 @@ export default function SummaryScreen() {
               <h3 className="text-sm font-semibold text-gray-900 mb-3">{label.en}</h3>
               <div className="space-y-1.5">
                 {Object.entries(data)
-                  .filter(([k]) => k !== "confidence" && k !== "children")
+                  .filter(([k]) => !k.startsWith("_") && k !== "confidence" && k !== "children")
                   .map(([key, val]) => (
                     <div key={key} className="flex items-center justify-between gap-2">
                       <span className="text-xs text-gray-500 capitalize">{key.replace(/_/g, " ")}</span>

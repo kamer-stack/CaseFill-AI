@@ -17,7 +17,7 @@ export interface CrossCheckResult {
   label: string
   source: { doc: string; field: string }
   target: { doc: string; field: string }
-  status: "MATCH" | "SIMILAR" | "MISMATCH" | "NEEDS_REVIEW"
+  status: "MATCH" | "SIMILAR" | "MISMATCH" | "NEEDS_REVIEW" | "DIFFERENT_SCRIPT"
   detail: string | null
   similarity: number | null
 }

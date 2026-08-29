@@ -212,7 +212,7 @@ function ExtractedFields({
       </div>
       <div className="divide-y divide-gray-50">
         {Object.entries(data)
-          .filter(([k]) => k !== "confidence" && k !== "children")
+          .filter(([k]) => !k.startsWith("_") && k !== "confidence" && k !== "children")
           .map(([key, value]) => (
             <FieldRow
               key={key}

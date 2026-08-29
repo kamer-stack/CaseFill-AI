@@ -51,40 +51,87 @@ TARGET CHILD: serial_number = {target_child_serial_number}
     
     prompt = f"""You are a document data extraction assistant specializing in Pakistani B-form (CRC) documents.
 
-CRITICAL INSTRUCTIONS FOR URDU COLUMN LABELS:
-1. Before extracting father/mother CNIC numbers, CAREFULLY READ the Urdu column headers:
-   - والد (Waalid) = Father
-   - والدہ (Waalida) = Mother
-   These differ by only one character (ہ at the end). Do NOT assume by position — read the actual label text.
+═══════════════════════════════════════════════════════════════
+STEP 1 — TOP SECTION (above the table)
+═══════════════════════════════════════════════════════════════
 
-2. Extract the following structure:
-   - crc_number: The CRC/form number at the top
-   - applicant_name: Usually the father's name (applicant/درخواست دہندہ)
-   - applicant_cnic_number: CNIC of the applicant
-   - father_name: Read from column labeled والد (Waalid)
-   - father_cnic_number: CNIC number from column labeled والد (Waalid) — preserve dashes: 00000-0000000-0
-   - mother_name: Read from column labeled والدہ (Waalida)
-   - mother_cnic_number: CNIC number from column labeled والدہ (Waalida) — preserve dashes: 00000-0000000-0
+Extract from the form header:
+- crc_number: The CRC/form registration number at the top of the form.
+- applicant_name: Read from the field labeled "درخواست دہندہ کا نام" (Applicant's Name). This is usually the father.
+- applicant_cnic_number: Read from the field labeled "درخواست دہندہ کا شناختی کارڈ نمبر" (Applicant's CNIC Number). Preserve dashes: 00000-0000000-0.
 
-3. Extract ALL children listed in the table as an array:
-   - serial_number: Row number on the form
-   - child_name: Name of the child
-   - child_registration_number: Registration/CRC number for that child
-   - gender_relation: e.g. son/daughter, بیٹا/بیٹی
-   - date_of_birth: DD-MM-YYYY format
-   - place_of_birth: Place of birth if shown
-   - is_target_child: boolean (see TARGET CHILD below)
+INTERNAL CONSISTENCY CHECK:
+- applicant_cnic_number MUST equal father_cnic_number (both are the father's CNIC).
+- If they differ, re-read both values carefully and use the one from the table column for father_cnic_number and the one from the top header for applicant_cnic_number. Report both exactly as read.
+- Include a field "_consistency_check" in your JSON output:
+  {{"applicant_cnic_matches_father_cnic": true/false, "applicant_cnic_read": "...", "father_cnic_read": "..."}}
 
-4. Include confidence scores (0-1) for each field in the "confidence" object.
+═══════════════════════════════════════════════════════════════
+STEP 2 — TABLE COLUMNS (right-to-left, 7 columns)
+═══════════════════════════════════════════════════════════════
 
-Return ONLY valid JSON matching this structure:
+The B-form table has exactly 7 columns in this right-to-left order:
+
+| # | Urdu Header                              | Transliteration / Meaning                    | What to extract                          |
+|---|------------------------------------------|----------------------------------------------|------------------------------------------|
+| 1 | نمبر شمار                                 | Serial number                                | serial_number (row number)               |
+| 2 | بچے کا نام اور رجسٹریشن نمبر              | Child's name & registration number           | child_name + child_registration_number   |
+| 3 | والد کا نام اور شناختی کارڈ نمبر          | Father's name & CNIC                         | father_name + father_cnic_number         |
+| 4 | والدہ کا نام اور شناختی کارڈ نمبر         | Mother's name & CNIC                         | mother_name + mother_cnic_number         |
+| 5 | جنس/رشتہ                                 | Gender / relation                            | gender_relation (son/daughter)           |
+| 6 | تاریخ پیدائش                              | Date of birth                                | date_of_birth (DD-MM-YYYY)              |
+| 7 | معذوری                                   | Remarks / disability                          | remarks (usually empty)                  |
+
+═══════════════════════════════════════════════════════════════
+CRITICAL COLUMN DISAMBIGUATION RULES
+═══════════════════════════════════════════════════════════════
+
+RULE A — Column 2 (child registration number) vs Columns 3-4 (parent CNICs):
+- Column 2 (بچے کا نام اور رجسٹریشن نمبر) contains a DIFFERENT number on every row — this is the child_registration_number.
+- Column 3 (والد کا نام اور شناختی کارڈ نمبر) contains the SAME father's CNIC repeated on every row — this is father_cnic_number.
+- Column 4 (والدہ کا نام اور شناختی کارڈ نمبر) contains the SAME mother's CNIC repeated on every row — this is mother_cnic_number.
+
+RULE B — How to distinguish them:
+- If a number is IDENTICAL across all rows → it is a parent CNIC (father or mother).
+- If a number is DIFFERENT on each row → it is a child registration number.
+- NEVER read father_cnic_number or mother_cnic_number from Column 2.
+
+RULE C — Before extracting, verify by reading and reporting the exact Urdu label of each column header you are pulling from. In your JSON, include a "_column_headers_read" object:
+{{
+  "_column_headers_read": {{
+    "col1": "<exact Urdu text you read for serial number column>",
+    "col2": "<exact Urdu text you read for child name/registration column>",
+    "col3": "<exact Urdu text you read for father name/CNIC column>",
+    "col4": "<exact Urdu text you read for mother name/CNIC column>",
+    "col5": "<exact Urdu text you read for gender column>",
+    "col6": "<exact Urdu text you read for DOB column>",
+    "col7": "<exact Urdu text you read for remarks column>"
+  }}
+}}
+
+RULE D — والد vs والدہ:
+- والد (Waalid) = Father — 5 characters
+- والدہ (Waalida) = Mother — 6 characters (ہ at the end)
+- These differ by only ONE character. Do NOT assume by position — read the actual label text.
+
+═══════════════════════════════════════════════════════════════
+STEP 3 — OUTPUT STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+Return ONLY valid JSON — no markdown, no explanation, no extra text.
+The JSON must match this exact structure:
 
 {json.dumps(doc_schema, indent=2)}
+
+Plus these diagnostic fields at the top level:
+- "_column_headers_read": (object described in RULE C above)
+- "_consistency_check": (object described in STEP 1 above)
 
 IMPORTANT:
 - Preserve all CNIC numbers with dashes: 00000-0000000-0
 - If a field is not visible, use null and confidence 0
-- Extract EVERY child row visible in the form{target_instruction}"""
+- Extract EVERY child row visible in the form
+- Include confidence scores (0-1) for each field in the "confidence" object{target_instruction}"""
     
     return prompt
 

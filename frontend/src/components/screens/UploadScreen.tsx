@@ -61,16 +61,20 @@ export default function UploadScreen() {
   }
 
   const handleMotherEducationSave = async () => {
-    if (!motherEducationText.trim()) return
+    const value = motherEducationText.trim()
+    if (!value) return
+    console.log("[MotherEducation] Saving value:", JSON.stringify(value))
     dispatch({ type: "SET_DOC", slot: "mother_education", patch: { status: "uploading" } })
     try {
-      const res = await saveMotherEducation(motherEducationText.trim())
+      const res = await saveMotherEducation(value)
+      console.log("[MotherEducation] API response:", JSON.stringify(res))
       dispatch({
         type: "SET_DOC",
         slot: "mother_education",
         patch: { extracted: res.extracted, status: "done" },
       })
     } catch (e) {
+      console.error("[MotherEducation] Save failed:", e)
       dispatch({ type: "SET_DOC", slot: "mother_education", patch: { status: "error", error: String(e) } })
     }
   }

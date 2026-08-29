@@ -31,10 +31,10 @@
       {
         "serial_number": "number (row number on the form)",
         "child_name": "string",
-        "child_registration_number": "string",
+        "child_registration_number": "string (unique per child row)",
         "gender_relation": "string (e.g. son/daughter)",
         "date_of_birth": "string (DD-MM-YYYY)",
-        "place_of_birth": "string"
+        "remarks": "string (معذوری column — usually empty or disability note)"
       }
     ],
     "confidence": "object, one score per top-level and per-child field"

@@ -4,6 +4,7 @@ Wraps the existing pipeline.py extraction logic with HTTP endpoints.
 """
 
 import json
+import re
 import shutil
 import uuid
 import unicodedata
@@ -68,6 +69,20 @@ def normalize_for_comparison(text: str | None) -> str | None:
 
 SIMILAR_THRESHOLD = 0.75  # Above this = SIMILAR, below = MISMATCH
 
+# Unicode range for Urdu/Arabic script
+_ARABIC_RANGE = re.compile(r"[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]")
+_ROMAN_RANGE = re.compile(r"[A-Za-z]")
+
+
+def _is_urdu_script(text: str) -> bool:
+    """Return True if the string contains Urdu/Arabic characters."""
+    return bool(_ARABIC_RANGE.search(text))
+
+
+def _is_roman_script(text: str) -> bool:
+    """Return True if the string contains Latin/Roman characters."""
+    return bool(_ROMAN_RANGE.search(text))
+
 
 def compare_values(val1, val2) -> dict:
     """
@@ -96,6 +111,38 @@ def compare_values(val1, val2) -> dict:
             "detail": f"'{val1}' vs '{val2}'",
             "similarity": round(ratio, 3),
         }
+
+
+def compare_names(val1, val2) -> dict:
+    """
+    Compare two name values. If one is Urdu-script and the other is Roman-script,
+    return DIFFERENT_SCRIPT instead of a misleading MISMATCH.
+    Falls back to compare_values() when both are in the same script.
+    """
+    if val1 is None or val2 is None:
+        return {"status": "NEEDS_REVIEW", "detail": "missing value", "similarity": None}
+
+    s1, s2 = str(val1).strip(), str(val2).strip()
+    v1_urdu = _is_urdu_script(s1)
+    v1_roman = _is_roman_script(s1)
+    v2_urdu = _is_urdu_script(s2)
+    v2_roman = _is_roman_script(s2)
+
+    # Detect cross-script: one is Urdu-only, the other is Roman-only
+    cross_script = (
+        (v1_urdu and not v1_roman and v2_roman and not v2_urdu)
+        or (v1_roman and not v1_urdu and v2_urdu and not v2_roman)
+    )
+
+    if cross_script:
+        return {
+            "status": "DIFFERENT_SCRIPT",
+            "detail": f"'{val1}' vs '{val2}' — names are in different scripts, please verify manually",
+            "similarity": None,
+        }
+
+    # Same script — use normal comparison
+    return compare_values(val1, val2)
 
 
 # ─── Models ──────────────────────────────────────────────────────────────────
@@ -211,6 +258,7 @@ async def save_address(full_address: str = Form(...)):
 @app.post("/api/save-mother-education")
 async def save_mother_education(education_level: str = Form(...)):
     """Save the manually-typed mother's education level (no image extraction needed)."""
+    print(f"[save-mother-education] Received education_level={education_level!r}")
     result = {"education_level": education_level}
 
     timestamp = datetime.now().isoformat()
@@ -219,6 +267,7 @@ async def save_mother_education(education_level: str = Form(...)):
         ("mother_education", json.dumps(result, ensure_ascii=False), timestamp),
     )
     conn.commit()
+    print(f"[save-mother-education] Saved to DB, returning: {result}")
 
     return {"document_type": "mother_education", "extracted": result, "timestamp": timestamp}
 
@@ -227,7 +276,9 @@ async def save_mother_education(education_level: str = Form(...)):
 async def run_cross_check(req: CrossCheckRequest):
     """
     Run all cross-document validations and return results.
-    Returns 4 states: MATCH, SIMILAR, MISMATCH, NEEDS_REVIEW.
+    Returns 5 states: MATCH, SIMILAR, MISMATCH, NEEDS_REVIEW, DIFFERENT_SCRIPT.
+    DIFFERENT_SCRIPT is used when comparing names across Urdu-script (B-form)
+    and Roman-script (CNIC/death cert/result card) — a manual-review flag, not a hard failure.
     """
     docs = req.documents
     checks = []
@@ -289,35 +340,35 @@ async def run_cross_check(req: CrossCheckRequest):
         ),
     })
 
-    # 3. Father name (B-form vs CNIC)
+    # 3. Father name (B-form vs CNIC) — may be Urdu vs Roman script
     checks.append({
         "label": "Father name (B-form vs CNIC)",
         "source": {"doc": "b_form", "field": "father_name"},
         "target": {"doc": "father_cnic", "field": "name"},
-        **compare_values(
+        **compare_names(
             get_field("b_form", "father_name"),
             get_field("father_cnic", "name"),
         ),
     })
 
-    # 4. Father name (B-form vs Death certificate)
+    # 4. Father name (B-form vs Death certificate) — may be Urdu vs Roman script
     checks.append({
         "label": "Father name (B-form vs Death cert)",
         "source": {"doc": "b_form", "field": "father_name"},
         "target": {"doc": "death_certificate", "field": "deceased_name"},
-        **compare_values(
+        **compare_names(
             get_field("b_form", "father_name"),
             get_field("death_certificate", "deceased_name"),
         ),
     })
 
-    # 5. Target child name (B-form vs Result card)
+    # 5. Target child name (B-form vs Result card) — may be Urdu vs Roman script
     target_name = get_target_child_name()
     checks.append({
         "label": "Target child name (B-form vs Result card)",
         "source": {"doc": "b_form", "field": "children[target].child_name"},
         "target": {"doc": "result_card", "field": "child_name"},
-        **compare_values(
+        **compare_names(
             target_name,
             get_field("result_card", "child_name"),
         ),
@@ -346,14 +397,14 @@ def list_extractions():
 async def submit_case(req: SubmitRequest):
     """Submit a case. Requires acknowledgment if any checks are flagged."""
     has_flags = any(
-        c.get("status") in ("MISMATCH", "SIMILAR", "NEEDS_REVIEW")
+        c.get("status") in ("MISMATCH", "SIMILAR", "NEEDS_REVIEW", "DIFFERENT_SCRIPT")
         for c in req.cross_checks
     )
 
     if has_flags and not req.acknowledgment.strip():
         raise HTTPException(
             400,
-            "Acknowledgment is required when there are unresolved flags (MISMATCH/SIMILAR/NEEDS_REVIEW).",
+            "Acknowledgment is required when there are unresolved flags (MISMATCH/SIMILAR/NEEDS_REVIEW/DIFFERENT_SCRIPT).",
         )
 
     case_id = str(uuid.uuid4())[:8]
