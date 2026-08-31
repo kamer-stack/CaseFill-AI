@@ -19,7 +19,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from pipeline import extract_document, schema, conn, cursor
+from pipeline import extract_document, schema, conn, cursor, save_extraction
+from validation import validate_extraction, postprocess_bform, validate_field
 
 app = FastAPI(title="OFSP Document Intake API")
 
@@ -230,6 +231,55 @@ async def run_extraction(
             document_type,
             target_child_serial_number=target_child_serial_number,
         )
+
+        # Post-process b_form: detect and correct column swaps using
+        # the structural invariant (parent CNICs repeat, child reg# varies)
+        if document_type == "b_form":
+            print("=" * 60)
+            print("[DEBUG-SERVER] BEFORE postprocess_bform:")
+            children_before = result.get("children", [])
+            if isinstance(children_before, list) and children_before:
+                first = children_before[0]
+                if isinstance(first, dict):
+                    print(f"  Row 0 father_cnic: {first.get('father_cnic_number')}")
+                    print(f"  Row 0 mother_cnic: {first.get('mother_cnic_number')}")
+                    print(f"  Row 0 child_reg:   {first.get('child_registration_number')}")
+                if len(children_before) > 1:
+                    last = children_before[-1]
+                    if isinstance(last, dict):
+                        print(f"  Row {len(children_before)-1} father_cnic: {last.get('father_cnic_number')}")
+                        print(f"  Row {len(children_before)-1} mother_cnic: {last.get('mother_cnic_number')}")
+                        print(f"  Row {len(children_before)-1} child_reg:   {last.get('child_registration_number')}")
+            print("=" * 60)
+
+            result = postprocess_bform(result)
+
+            print("=" * 60)
+            print("[DEBUG-SERVER] AFTER postprocess_bform:")
+            children_after = result.get("children", [])
+            if isinstance(children_after, list) and children_after:
+                first = children_after[0]
+                if isinstance(first, dict):
+                    print(f"  Row 0 father_cnic: {first.get('father_cnic_number')}")
+                    print(f"  Row 0 mother_cnic: {first.get('mother_cnic_number')}")
+                    print(f"  Row 0 child_reg:   {first.get('child_registration_number')}")
+                if len(children_after) > 1:
+                    last = children_after[-1]
+                    if isinstance(last, dict):
+                        print(f"  Row {len(children_after)-1} father_cnic: {last.get('father_cnic_number')}")
+                        print(f"  Row {len(children_after)-1} mother_cnic: {last.get('mother_cnic_number')}")
+                        print(f"  Row {len(children_after)-1} child_reg:   {last.get('child_registration_number')}")
+            corrections = result.get("_column_corrections", [])
+            print(f"  Corrections applied: {corrections}")
+            print("=" * 60)
+
+        # Validate all fields — force confidence to 0 on invalid values,
+        # but keep the raw value so the FSO can see what was misread
+        result = validate_extraction(document_type, result)
+
+        # Persist the corrected/validated result, not the raw model output
+        save_extraction(document_type, result)
+
         return {
             "document_type": document_type,
             "extracted": result,
@@ -270,6 +320,16 @@ async def save_mother_education(education_level: str = Form(...)):
     print(f"[save-mother-education] Saved to DB, returning: {result}")
 
     return {"document_type": "mother_education", "extracted": result, "timestamp": timestamp}
+
+
+@app.post("/api/validate-field")
+async def validate_field_endpoint(req: FieldEdit):
+    """
+    Validate a single field value (used by the frontend before committing
+    a manual edit). Returns {valid: bool, error: str|null}.
+    """
+    is_valid, error_msg = validate_field(req.field_path, req.new_value)
+    return {"valid": is_valid, "error": error_msg}
 
 
 @app.post("/api/cross-check")

@@ -3,7 +3,7 @@ import { useCase } from "@/context/CaseContext"
 import { ALL_SLOTS, DOCUMENT_LABELS } from "@/types"
 import type { DocumentSlot } from "@/types"
 import { uploadImage, extractDocument, saveAddress, saveMotherEducation } from "@/lib/api"
-import { CheckCircle2, XCircle, AlertTriangle, ImagePlus, FileText } from "lucide-react"
+import { CheckCircle2, XCircle, AlertTriangle, ImagePlus, FileText, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export default function UploadScreen() {
@@ -87,6 +87,33 @@ export default function UploadScreen() {
     dispatch({ type: "SET_DOC", slot, patch: { status: "empty", error: null, extracted: null } })
   }
 
+  /**
+   * Open the file picker to replace an already-uploaded image.
+   * Old data is NOT cleared until the user actually picks a new file —
+   * if they cancel the picker, everything stays as it was.
+   */
+  const handleReplaceImage = (slot: DocumentSlot) => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = "image/*,.heic,.heif"
+    input.onchange = () => handleDrop(slot, input.files)
+    input.click()
+  }
+
+  /**
+   * Reset a text-based slot (address / mother's education) so the
+   * input form reappears. Clears the old saved value.
+   */
+  const resetTextSlot = (slot: DocumentSlot) => {
+    dispatch({
+      type: "SET_DOC",
+      slot,
+      patch: { status: "empty", extracted: null, error: null, notProvided: false },
+    })
+    if (slot === "address") setAddressText("")
+    if (slot === "mother_education") setMotherEducationText("")
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {/* Header */}
@@ -166,11 +193,20 @@ export default function UploadScreen() {
                 {isTextInput ? (
                   <div>
                     {doc.status === "done" ? (
-                      <div className="bg-primary-50 rounded-lg p-3 text-sm text-primary-dark">
-                        <CheckCircle2 className="inline w-4 h-4 mr-1" />
-                        {isAddress
-                          ? (doc.extracted?.full_address as string)
-                          : (doc.extracted?.education_level as string)}
+                      <div className="space-y-2">
+                        <div className="bg-primary-50 rounded-lg p-3 text-sm text-primary-dark">
+                          <CheckCircle2 className="inline w-4 h-4 mr-1" />
+                          {isAddress
+                            ? (doc.extracted?.full_address as string)
+                            : (doc.extracted?.education_level as string)}
+                        </div>
+                        <button
+                          onClick={() => resetTextSlot(slot)}
+                          className="text-xs text-gray-500 hover:text-primary flex items-center gap-1 transition-colors"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          Replace
+                        </button>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -220,15 +256,24 @@ export default function UploadScreen() {
                     )}
                   </div>
                 ) : doc.status === "done" && !doc.notProvided ? (
-                  /* Done state — thumbnail */
-                  <div className="flex items-center gap-3">
-                    {doc.imagePath && (
-                      <img src={doc.imagePath} alt="" className="w-16 h-16 object-cover rounded-lg border" />
-                    )}
-                    <div className="text-sm text-primary-dark font-medium">
-                      <CheckCircle2 className="inline w-4 h-4 mr-1" />
-                      Extracted successfully
+                  /* Done state — thumbnail + Replace */
+                  <div>
+                    <div className="flex items-center gap-3">
+                      {doc.imagePath && (
+                        <img src={doc.imagePath} alt="" className="w-16 h-16 object-cover rounded-lg border" />
+                      )}
+                      <div className="text-sm text-primary-dark font-medium">
+                        <CheckCircle2 className="inline w-4 h-4 mr-1" />
+                        Extracted successfully
+                      </div>
                     </div>
+                    <button
+                      onClick={() => handleReplaceImage(slot)}
+                      className="mt-2 text-xs text-gray-500 hover:text-primary flex items-center gap-1 transition-colors"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Replace document
+                    </button>
                   </div>
                 ) : doc.notProvided ? (
                   /* Not provided state */

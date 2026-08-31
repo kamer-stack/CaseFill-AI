@@ -32,6 +32,11 @@ export interface SubmitResponse {
   submitted_at: string
 }
 
+export interface ValidateFieldResponse {
+  valid: boolean
+  error: string | null
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, options)
   if (!res.ok) {
@@ -94,5 +99,21 @@ export async function submitCase(data: {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+  })
+}
+
+export async function validateField(
+  documentType: string,
+  fieldPath: string,
+  newValue: string | null
+): Promise<ValidateFieldResponse> {
+  return request<ValidateFieldResponse>("/validate-field", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      document_type: documentType,
+      field_path: fieldPath,
+      new_value: newValue,
+    }),
   })
 }

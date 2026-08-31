@@ -209,16 +209,25 @@ IMPORTANT:
         result_json = json.loads(result_text)
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse JSON from model response: {e}\nRaw response: {result_text}")
-    
-    # Save to database
+
+    # DEBUG: log the raw model output before it leaves the pipeline
+    if document_type == "b_form":
+        print("=" * 60)
+        print("[DEBUG-PIPELINE] RAW Qwen-VL response for b_form:")
+        print(json.dumps(result_json, ensure_ascii=False, indent=2))
+        print("=" * 60)
+
+    return result_json
+
+
+def save_extraction(document_type: str, data: dict) -> None:
+    """Persist an already-processed extraction result to SQLite."""
     timestamp = datetime.now().isoformat()
     cursor.execute(
         "INSERT INTO extractions (document_type, extracted_json, timestamp) VALUES (?, ?, ?)",
-        (document_type, json.dumps(result_json, ensure_ascii=False), timestamp)
+        (document_type, json.dumps(data, ensure_ascii=False), timestamp),
     )
     conn.commit()
-    
-    return result_json
 
 
 def get_all_extractions() -> list:

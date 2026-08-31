@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import { useCase } from "@/context/CaseContext"
 import { ALL_SLOTS, DOCUMENT_LABELS } from "@/types"
 import type { DocumentSlot } from "@/types"
-import { crossCheck } from "@/lib/api"
+import { crossCheck, validateField } from "@/lib/api"
 import { cn, confidenceColor, crossCheckColor, crossCheckIcon, isRTL, normalizeNumerals } from "@/lib/utils"
 import { CheckCircle2, AlertTriangle, XCircle, ChevronLeft, Edit3 } from "lucide-react"
 
@@ -43,10 +43,25 @@ export default function ReviewScreen() {
     runCrossCheck()
   }, [runCrossCheck])
 
-  const handleFieldEdit = (slot: DocumentSlot, field: string, value: string | null) => {
+  const handleFieldEdit = async (
+    slot: DocumentSlot,
+    field: string,
+    value: string | null
+  ): Promise<{ valid: boolean; error: string | null }> => {
+    // Validate via backend before committing
+    try {
+      const result = await validateField(slot, field, value)
+      if (!result.valid) {
+        return result  // Return error — FieldRow will show it inline
+      }
+    } catch {
+      // If validation endpoint is unreachable, allow the edit
+      // (better to let the FSO work than to block them on a network issue)
+    }
     dispatch({ type: "EDIT_FIELD", slot, field, value })
     // Re-run cross-check after a short debounce
     setTimeout(() => runCrossCheck(), 500)
+    return { valid: true, error: null }
   }
 
   const activeDoc = activeSlot ? state.documents[activeSlot] : null
@@ -280,20 +295,43 @@ function FieldRow({
   label?: string
   value: unknown
   confidence?: number
-  onEdit: (slot: DocumentSlot, field: string, value: string | null) => void
+  onEdit: (slot: DocumentSlot, field: string, value: string | null) => Promise<{ valid: boolean; error: string | null }>
   compact?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(String(value ?? ""))
+  const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
   const displayKey = label ?? fieldKey.split(".").pop() ?? fieldKey
   const displayVal = normalizeNumerals(value != null ? String(value) : null)
   const rtl = isRTL(displayVal)
 
-  const commit = () => {
-    setEditing(false)
-    if (draft !== String(value ?? "")) {
-      onEdit(slot, fieldKey, draft || null)
+  const commit = async () => {
+    if (saving) return
+    if (draft === String(value ?? "")) {
+      setEditing(false)
+      setError(null)
+      return
     }
+    setSaving(true)
+    try {
+      const result = await onEdit(slot, fieldKey, draft || null)
+      if (result.valid) {
+        setEditing(false)
+        setError(null)
+      } else {
+        setError(result.error ?? "Invalid value")
+      }
+    } catch (e) {
+      setError(String(e))
+    }
+    setSaving(false)
+  }
+
+  const cancel = () => {
+    setEditing(false)
+    setError(null)
+    setDraft(String(value ?? ""))
   }
 
   return (
@@ -314,18 +352,38 @@ function FieldRow({
         )}
       </div>
       {editing ? (
-        <input
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => e.key === "Enter" && commit()}
-          className="mt-1 w-full px-2 py-1 border border-primary rounded text-sm outline-none focus:ring-2 focus:ring-primary/20"
-        />
+        <div className="mt-1">
+          <input
+            autoFocus
+            value={draft}
+            onChange={(e) => { setDraft(e.target.value); setError(null) }}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit()
+              if (e.key === "Escape") cancel()
+            }}
+            disabled={saving}
+            className={cn(
+              "w-full px-2 py-1 border rounded text-sm outline-none focus:ring-2",
+              error
+                ? "border-red-400 focus:ring-red-200 bg-red-50"
+                : "border-primary focus:ring-primary/20"
+            )}
+          />
+          {saving && (
+            <p className="text-xs text-gray-400 mt-1 animate-pulse">Validating...</p>
+          )}
+          {error && !saving && (
+            <p className="text-xs text-red-600 mt-1">
+              <XCircle className="inline w-3 h-3 mr-0.5" />
+              {error}
+            </p>
+          )}
+        </div>
       ) : (
         <div
           className="flex items-center gap-2 mt-0.5 cursor-pointer group"
-          onClick={() => { setDraft(String(value ?? "")); setEditing(true) }}
+          onClick={() => { setDraft(String(value ?? "")); setEditing(true); setError(null) }}
         >
           {displayVal ? (
             <span
