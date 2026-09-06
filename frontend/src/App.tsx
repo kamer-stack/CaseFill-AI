@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AppUser, UserRole, INITIAL_DOCUMENT_SLOTS, DocumentSlotConfig, CrossCheckResult } from './types';
+import { AppUser, UserRole, INITIAL_DOCUMENT_SLOTS, DocumentSlotConfig, CrossCheckResult, DocType } from './types';
 import { authApi, setAuthToken, getAuthToken } from './lib/api';
 import { LandingPage } from './components/public/LandingPage';
 import { AuthModal } from './components/public/AuthModal';
@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [slots, setSlots] = useState<DocumentSlotConfig[]>(INITIAL_DOCUMENT_SLOTS);
   const [extractedData, setExtractedData] = useState<Record<string, any>>({});
   const [crossChecks, setCrossChecks] = useState<CrossCheckResult[]>([]);
+  const [reviewedDocs, setReviewedDocs] = useState<Set<DocType>>(new Set());
   const [currentCaseId, setCurrentCaseId] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -159,6 +160,8 @@ const App: React.FC = () => {
                 onProceed={() => setIntakeStep(3)}
                 onBack={() => setIntakeStep(1)}
                 isDualLanguage={isDualLanguage}
+                reviewedDocs={reviewedDocs}
+                setReviewedDocs={setReviewedDocs}
               />
             )}
             {currentTab === 'intake' && intakeStep === 3 && (

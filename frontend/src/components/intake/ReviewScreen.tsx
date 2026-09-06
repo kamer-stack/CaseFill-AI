@@ -22,6 +22,8 @@ interface ReviewScreenProps {
   onProceed: () => void;
   onBack: () => void;
   isDualLanguage: boolean;
+  reviewedDocs: Set<DocType>;
+  setReviewedDocs: React.Dispatch<React.SetStateAction<Set<DocType>>>;
 }
 
 // ── Cross-check display helpers ────────────────────────────────────────────
@@ -103,10 +105,10 @@ export const ReviewScreen: React.FC<ReviewScreenProps> = ({
   onProceed,
   onBack,
   isDualLanguage,
+  reviewedDocs,
+  setReviewedDocs,
 }) => {
   const [activeSlot, setActiveSlot] = useState<DocType | null>(null);
-  // Documents with missing confidence that the FSO has opened during this session
-  const [reviewedDocs, setReviewedDocs] = useState<Set<DocType>>(new Set());
   const [isChecking, setIsChecking] = useState(false);
 
   // Completed slots with extracted data
