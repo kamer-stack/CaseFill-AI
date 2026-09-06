@@ -53,7 +53,7 @@ const checkIcon = (s: string) => {
 const confidenceColor = (c: number) => {
   if (c >= 0.9) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
   if (c >= 0.7) return 'bg-amber-50 text-amber-700 border-amber-200';
-  if (c === 0) return 'bg-slate-50 text-slate-400 border-slate-200';
+  if (c === 0) return 'bg-rose-100 text-rose-700 border-rose-300';
   return 'bg-rose-50 text-rose-700 border-rose-200';
 };
 
@@ -71,7 +71,7 @@ const confidenceDot = (c: number) => {
 // at all, which is why review-needed fields didn't stand out.
 const confidenceRowAccent = (c: number | undefined) => {
   if (c == null) return '';
-  if (c === 0) return 'border-l-[3px] border-l-rose-400 bg-rose-50/40';
+  if (c === 0) return 'border-l-[4px] border-l-rose-500 bg-rose-100/70';
   if (c >= 0.9) return '';
   if (c >= 0.7) return 'border-l-[3px] border-l-amber-300';
   return 'border-l-[3px] border-l-rose-400';
