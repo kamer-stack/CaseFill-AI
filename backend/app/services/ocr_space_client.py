@@ -36,20 +36,25 @@ class OCRSpaceError(RuntimeError):
     """Raised when OCR.space fails or returns no usable text."""
 
 
-def extract_urdu_text(image_path: str | Path) -> str:
+def extract_text(image_path: str | Path, language: str = "urd") -> str:
     """
-    Send an image to OCR.space (Engine 3, language=urd) and return the
-    raw extracted text.
+    Send an image to OCR.space (Engine 3) and return the raw extracted text.
 
-    Raises OCRSpaceError on any failure (missing API key, network error,
-    non-OK API response, or empty result) — callers should NOT silently
+    Args:
+        language: OCR.space language code. "urd" for Urdu documents
+            (B-form, old CNIC). "eng" for English-only reads on bilingual
+            documents (e.g. death certificate — has both English and Urdu
+            printed, but we only want the English side; language="eng"
+            makes OCR.space focus on and return the English text).
+
+    Raises OCRSpaceError on any failure — callers should NOT silently
     fall back to a guessed value; an extraction failure here must surface
     as an error the FSO sees, per NULL OVER GUESS.
     """
     if not OCR_SPACE_API_KEY:
         raise OCRSpaceError(
             "OCR_SPACE_API_KEY not configured. Set it in .env before "
-            "using B-form or old-CNIC extraction."
+            "using OCR.space extraction."
         )
 
     image_path = Path(image_path)
@@ -63,7 +68,7 @@ def extract_urdu_text(image_path: str | Path) -> str:
                 files={"file": (image_path.name, f)},
                 data={
                     "apikey": OCR_SPACE_API_KEY,
-                    "language": "urd",
+                    "language": language,
                     "OCREngine": "3",
                     "isOverlayRequired": "false",
                     "scale": "true",
@@ -98,3 +103,8 @@ def extract_urdu_text(image_path: str | Path) -> str:
         raise OCRSpaceError("OCR.space returned empty text for this image.")
 
     return text
+
+
+def extract_urdu_text(image_path: str | Path) -> str:
+    """Backward-compatible wrapper: OCR.space with language=urd."""
+    return extract_text(image_path, language="urd")

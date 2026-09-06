@@ -17,14 +17,13 @@ from .prompts_text_structuring import (
     build_cnic_text_structuring_prompt,
 )
 from .header_mapping import adapt_header_keyed_to_canonical, match_target_child
-from .ocr_space_client import extract_urdu_text, OCRSpaceError
+from .ocr_space_client import extract_text, extract_urdu_text, OCRSpaceError
 
 # Document types where OCR.space + Qwen-plus text-structuring is used
-# instead of Qwen-VL vision. B-form is ALWAYS routed here (always a dense
-# Urdu table). CNIC only routes here when the FSO marks it "old format"
-# at upload — new bilingual CNICs stay on Qwen-VL vision, unchanged.
-OCR_SPACE_ALWAYS_TYPES = {"b_form"}
-OCR_SPACE_CNIC_TYPES = {"mother_cnic", "father_cnic"}
+# instead of Qwen-VL vision.
+OCR_SPACE_ALWAYS_TYPES = {"b_form"}                    # always Urdu OCR
+OCR_SPACE_ENGLISH_TYPES = {"death_certificate"}        # bilingual doc, English OCR only
+OCR_SPACE_CNIC_TYPES = {"mother_cnic", "father_cnic"}  # only when FSO marks "old format"
 
 # Load extraction schemas
 _SCHEMA_PATH = Path(__file__).parent.parent / "data" / "extraction_schemas.json"
@@ -108,8 +107,10 @@ def extract_document(
     # ── Route 1: OCR.space + Qwen-plus text structuring ──
     # B-form is always routed here. CNIC is routed here only when the FSO
     # marked it "old format" at upload.
-    use_ocr_space = document_type in OCR_SPACE_ALWAYS_TYPES or (
-        document_type in OCR_SPACE_CNIC_TYPES and cnic_format == "old"
+    use_ocr_space = (
+        document_type in OCR_SPACE_ALWAYS_TYPES
+        or document_type in OCR_SPACE_ENGLISH_TYPES
+        or (document_type in OCR_SPACE_CNIC_TYPES and cnic_format == "old")
     )
 
     if use_ocr_space and prompt_builder is None:
@@ -199,7 +200,8 @@ def _extract_via_ocr_space(
     """
     start_time = time.time()
 
-    raw_ocr_text = extract_urdu_text(image_path)  # raises OCRSpaceError on failure
+    ocr_language = "eng" if document_type in OCR_SPACE_ENGLISH_TYPES else "urd"
+    raw_ocr_text = extract_text(image_path, language=ocr_language)  # raises OCRSpaceError on failure
 
     if document_type == "b_form":
         prompt = build_bform_text_structuring_prompt(raw_ocr_text, target_child_serial_number)
