@@ -440,27 +440,18 @@ function ExtractedFields({
             />
           ))}
 
-        {/* B-form children array */}
+        {/* B-form target child fields — shown flat, no "Children Listed"
+            wrapper/header since only the case's own orphan appears here. */}
         {Array.isArray(data.children) && (
           <div className="p-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-3">
-              {isDualLanguage ? 'بچوں کی فہرست' : 'Children Listed'}
-            </h3>
             <div className="space-y-3">
-              {(data.children as Record<string, any>[]).map((child, i) => (
+              {(data.children as Record<string, any>[])
+                .filter((child) => child.is_target_child)
+                .map((child, i) => (
                 <div
                   key={i}
-                  className={`rounded-xl border p-3 ${
-                    child.is_target_child
-                      ? 'border-indigo-400 bg-indigo-50'
-                      : 'border-slate-200'
-                  }`}
+                  className="rounded-xl border p-3 border-slate-200"
                 >
-                  {child.is_target_child && (
-                    <span className="text-xs font-bold text-indigo-600 mb-2 block">
-                      ★ {isDualLanguage ? 'مطلوبہ بچہ' : 'Target Child'}
-                    </span>
-                  )}
                   {Object.entries(child)
                     .filter(([k]) => k !== 'is_target_child')
                     .map(([k, v]) => (

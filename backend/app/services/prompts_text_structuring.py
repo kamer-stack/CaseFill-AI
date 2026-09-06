@@ -99,6 +99,37 @@ STRUCTURAL SIGNALS (sanity check only, never a substitute for reading the text):
 - The father's CNIC and mother's CNIC repeat identically across every child row.
 - The child's registration number differs per row.
 
+═══════════════════════════════════════════════════════════════
+CHILD vs MOTHER — DO NOT CONFUSE (most common failure mode)
+═══════════════════════════════════════════════════════════════
+
+Child, father, and mother columns all look structurally identical in flattened
+OCR text: each is just "a name followed by a number." This is exactly why they
+get swapped. Before assigning any name+number block to a column, check it
+against this rule — it is not optional:
+
+- Look at the SAME number across ALL rows of the table (if there is more than
+  one row). If that number is IDENTICAL in every row → it is a PARENT number
+  (father or mother), never the child's. If it is DIFFERENT per row (or there
+  is only one row) → it is the CHILD's registration number.
+- Never place a parent's name+number pair into a child cell, and never place
+  the child's name+registration number into a parent cell — even if the OCR
+  text's physical ordering makes them appear adjacent or swapped relative to
+  where you expect them.
+- A child's name and a mother's name being similar-sounding, identical, or
+  printed near each other in the flattened text is NOT evidence they are the
+  same field — verify using the repeating-number test above, not proximity
+  or guesswork.
+- If you cannot tell, from the text alone, which block belongs to the child
+  vs. the mother for a given row, leave that row's child_name /
+  child_registration_number null with confidence 0 — do NOT default to
+  whichever block appears first or nearest.
+
+FATHER CNIC — DO NOT SKIP:
+- Each father/mother table cell contains TWO lines of text: the name, then the CNIC number below it. Extract BOTH into the cell's "name" and "cnic" keys.
+- The father cell is read with the exact same care as the mother cell. If you can find and extract the mother's CNIC digits from her cell, apply that same effort to the father's cell — do not leave "cnic" empty for father while filling it for mother.
+- Only leave a cell's "cnic" null if the OCR text genuinely contains no legible number for that cell — never because the name line was the only part you looked at.
+
 Also extract from the top section (before the table):
 - crc_number, applicant_name, applicant_cnic_number (label: درخواست دہندہ)
 
