@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>B-form synthetic - A</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0; padding: 40px;
+    background: #fff;
+    font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq',
+                 'Traditional Arabic', 'Arabic Typesetting',
+                 'Segoe UI', Tahoma, sans-serif;
+    color: #000;
+}
+.title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    direction: rtl;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+}
+.subtitle {
+    text-align: center;
+    font-size: 16px;
+    direction: rtl;
+    color: #444;
+    margin-bottom: 16px;
+}
+.header-block {
+    direction: rtl;
+    margin: 20px 0;
+    font-size: 18px;
+    border: 1px solid #000;
+    padding: 12px;
+    background: #fafafa;
+}
+.header-block .row {
+    display: flex;
+    gap: 30px;
+    margin: 8px 0;
+    flex-wrap: wrap;
+}
+.header-block .field {
+    flex: 1;
+    min-width: 300px;
+}
+.header-block .label {
+    font-weight: bold;
+    margin-left: 8px;
+}
+.header-block .value {
+    border-bottom: 1px solid #888;
+    padding: 2px 6px;
+    display: inline-block;
+    min-width: 200px;
+}
+table.bform {
+    width: 100%;
+    border-collapse: collapse;
+    direction: rtl;
+    margin-top: 20px;
+    font-size: 16px;
+}
+table.bform th, table.bform td {
+    border: 1px solid #000;
+    padding: 10px 8px;
+    vertical-align: top;
+    text-align: right;
+    direction: rtl;
+}
+table.bform th {
+    background: #e8e8e8;
+    font-weight: bold;
+    font-size: 17px;
+}
+table.bform td {
+    min-height: 50px;
+    line-height: 1.6;
+}
+td.serial { text-align: center; font-weight: bold; font-size: 18px; }
+td.child-cell .name, td.parent-cell .name {
+    font-size: 17px;
+    display: block;
+    margin-bottom: 6px;
+}
+td.child-cell .reg, td.parent-cell .cnic {
+    font-family: 'Courier New', monospace;
+    font-size: 15px;
+    color: #222;
+    display: block;
+    letter-spacing: 0.5px;
+}
+td.gender, td.dob, td.remarks {
+    text-align: center;
+    font-size: 15px;
+}
+.missing { color: #bbb; font-style: italic; }
+.footer {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    direction: ltr;
+}
+</style>
+</head>
+<body>
+<div class="title">فارم ب — مصنوعی دستاویز الف</div>
+<div class="subtitle">Synthetic B-form — Test A: all identities distinct</div>
+
+<div class="header-block">
+  <div class="row">
+    <div class="field">
+      <span class="label">نمبر رجسٹریشن / CRC:</span>
+      <span class="value" style="font-family: monospace;">99-TEST-A-2024</span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <span class="label">درخواست دہندہ کا نام:</span>
+      <span class="value">شفیق الرحمن صدیقی</span>
+    </div>
+    <div class="field">
+      <span class="label">درخواست دہندہ کا شناختی کارڈ نمبر:</span>
+      <span class="value" style="font-family: monospace;">99101-7111111-1</span>
+    </div>
+  </div>
+</div>
+
+<table class="bform">
+<thead>
+<tr>
+<th>نمبر شمار</th><th>بچے کا نام اور رجسٹریشن نمبر</th><th>والد کا نام اور شناختی کارڈ نمبر</th><th>والدہ کا نام اور شناختی کارڈ نمبر</th><th>جنس / رشتہ</th><th>تاریخ پیدائش</th><th>معذوری</th></thead><tbody><tr><td class="serial">1</td><td class="child-cell"><span class="name">عمران شفیق</span><span class="reg">99-2024-111111</span></td><td class="parent-cell"><span class="name">شفیق الرحمن صدیقی</span><span class="cnic">99101-7111111-1</span></td><td class="parent-cell"><span class="name">زرقونہ شفیق</span><span class="cnic">99102-8222222-2</span></td><td class="gender">بیٹا</td><td class="dob">15-03-2018</td><td class="remarks"><span class="missing">—</span></td></tr></tbody></table><div class="footer">Synthetic test A — not a real document.</div></body></html>
