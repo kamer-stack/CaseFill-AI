@@ -140,7 +140,7 @@ def run_cross_checks(documents: dict) -> list[dict]:
 
     # 1. Father CNIC number (B-form vs Father CNIC card)
     checks.append({
-        "label": "Father CNIC number",
+        "label": "Father CNIC number (B-form vs CNIC)",
         "source": {"doc": "b_form", "field": "father_cnic_number"},
         "target": {"doc": "father_cnic", "field": "cnic_number"},
         **compare_values(
@@ -151,7 +151,7 @@ def run_cross_checks(documents: dict) -> list[dict]:
 
     # 2. Mother CNIC number (B-form vs Mother CNIC card)
     checks.append({
-        "label": "Mother CNIC number",
+        "label": "Mother CNIC number (B-form vs CNIC)",
         "source": {"doc": "b_form", "field": "mother_cnic_number"},
         "target": {"doc": "mother_cnic", "field": "cnic_number"},
         **compare_values(
