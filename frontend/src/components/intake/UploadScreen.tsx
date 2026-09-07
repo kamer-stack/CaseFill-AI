@@ -51,6 +51,9 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
   isDualLanguage,
 }) => {
   const [targetChildRegNumber, setTargetChildRegNumber] = useState('');
+  const [targetChildName, setTargetChildName] = useState('');
+  const [targetChildNameTouched, setTargetChildNameTouched] = useState(false);
+  const targetChildNameShowError = targetChildNameTouched && targetChildName.trim().length === 0;
   const [addressText, setAddressText] = useState('');
   const [educationText, setEducationText] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -244,32 +247,56 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
       </div>
 
       {/* Target Child (B-Form) */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-        <label className="text-sm font-semibold text-slate-700 block mb-2">
-          {isDualLanguage
-            ? "Target Child's CNIC — بچے کا شناختی کارڈ نمبر"
-            : "Target Child's CNIC"}
-        </label>
-        <input
-          type="text"
-          value={targetChildRegNumber}
-          onChange={(e) => setTargetChildRegNumber(e.target.value)}
-          placeholder="e.g. 00000-0000000-0"
-          className={`w-56 px-3 py-2 border rounded-xl text-sm focus:ring-2 outline-none ${
-            targetChildCnicShowError
-              ? 'border-rose-400 focus:ring-rose-500/30 focus:border-rose-500'
-              : 'border-slate-300 focus:ring-indigo-500/30 focus:border-indigo-500'
-          }`}
-        />
-        <p className="text-xs text-slate-400 mt-1">
-          13 digits, format 00000-0000000-0. We use it to auto-match the
-          right child after extraction and flag it if it doesn't match.
-        </p>
-        {targetChildCnicShowError && (
-          <p className="text-xs text-rose-500 mt-1">
-            That doesn't look like a valid CNIC — check the format.
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-4">
+        <div>
+          <label className="text-sm font-semibold text-slate-700 block mb-2">
+            {isDualLanguage
+              ? "Target Child's Name — بچے کا نام"
+              : "Target Child's Name"}
+          </label>
+          <input
+            type="text"
+            value={targetChildName}
+            onChange={(e) => setTargetChildName(e.target.value)}
+            onBlur={() => setTargetChildNameTouched(true)}
+            placeholder="e.g. Ali Hassan"
+            className={`w-56 px-3 py-2 border rounded-xl text-sm focus:ring-2 outline-none ${
+              targetChildNameShowError
+                ? 'border-rose-400 focus:ring-rose-500/30 focus:border-rose-500'
+                : 'border-slate-300 focus:ring-indigo-500/30 focus:border-indigo-500'
+            }`}
+          />
+          {targetChildNameShowError && (
+            <p className="text-xs text-rose-500 mt-1">Name is required.</p>
+          )}
+        </div>
+        <div>
+          <label className="text-sm font-semibold text-slate-700 block mb-2">
+            {isDualLanguage
+              ? "Target Child's CNIC — بچے کا شناختی کارڈ نمبر"
+              : "Target Child's CNIC"}
+          </label>
+          <input
+            type="text"
+            value={targetChildRegNumber}
+            onChange={(e) => setTargetChildRegNumber(e.target.value)}
+            placeholder="e.g. 00000-0000000-0"
+            className={`w-56 px-3 py-2 border rounded-xl text-sm focus:ring-2 outline-none ${
+              targetChildCnicShowError
+                ? 'border-rose-400 focus:ring-rose-500/30 focus:border-rose-500'
+                : 'border-slate-300 focus:ring-indigo-500/30 focus:border-indigo-500'
+            }`}
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            13 digits, format 00000-0000000-0. We use it to auto-match the
+            right child after extraction and flag it if it doesn't match.
           </p>
-        )}
+          {targetChildCnicShowError && (
+            <p className="text-xs text-rose-500 mt-1">
+              That doesn't look like a valid CNIC — check the format.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Upload Grid */}
