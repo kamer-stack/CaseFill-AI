@@ -24,6 +24,10 @@ interface UploadScreenProps {
   onStartTimer: () => void;
   onProceed: () => void;
   isDualLanguage: boolean;
+  targetChildName: string;
+  setTargetChildName: React.Dispatch<React.SetStateAction<string>>;
+  targetChildRegNumber: string;
+  setTargetChildRegNumber: React.Dispatch<React.SetStateAction<string>>;
 }
 
 // 13-digit Pakistani CNIC, e.g. 00000-0000000-0
@@ -49,9 +53,11 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
   onStartTimer,
   onProceed,
   isDualLanguage,
+  targetChildName,
+  setTargetChildName,
+  targetChildRegNumber,
+  setTargetChildRegNumber,
 }) => {
-  const [targetChildRegNumber, setTargetChildRegNumber] = useState('');
-  const [targetChildName, setTargetChildName] = useState('');
   const [targetChildNameTouched, setTargetChildNameTouched] = useState(false);
   const targetChildNameShowError = targetChildNameTouched && targetChildName.trim().length === 0;
   const [addressText, setAddressText] = useState('');
@@ -221,13 +227,20 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
         </div>
         <button
           onClick={onProceed}
-          disabled={doneCount === 0}
+          disabled={!targetChildName.trim() || !targetChildCnicValid}
           className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-2 cursor-pointer"
         >
           <span>{isDualLanguage ? 'جائزہ پر جائیں' : 'Continue to Review'}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
+      {(!targetChildName.trim() || !targetChildCnicValid) && (
+        <p className="text-xs text-amber-600 -mt-2">
+          {isDualLanguage
+            ? 'جاری رکھنے کے لیے بچے کا نام اور شناختی کارڈ نمبر درکار ہے'
+            : "Enter the orphan's name and a valid CNIC above before continuing."}
+        </p>
+      )}
 
       {/* Progress Bar */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">

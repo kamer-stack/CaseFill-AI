@@ -15,6 +15,7 @@ from .prompts_header_keyed import build_bform_prompt_header_keyed
 from .prompts_text_structuring import (
     build_bform_text_structuring_prompt,
     build_cnic_text_structuring_prompt,
+    build_death_certificate_text_structuring_prompt,
 )
 from .header_mapping import adapt_header_keyed_to_canonical, match_target_child
 from .ocr_space_client import extract_text, extract_urdu_text, OCRSpaceError
@@ -205,6 +206,8 @@ def _extract_via_ocr_space(
 
     if document_type == "b_form":
         prompt = build_bform_text_structuring_prompt(raw_ocr_text, target_child_serial_number)
+    elif document_type == "death_certificate":
+        prompt = build_death_certificate_text_structuring_prompt(raw_ocr_text, doc_schema)
     else:
         prompt = build_cnic_text_structuring_prompt(raw_ocr_text, doc_schema)
 

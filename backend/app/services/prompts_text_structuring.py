@@ -105,30 +105,69 @@ CHILD vs MOTHER — DO NOT CONFUSE (most common failure mode)
 
 Child, father, and mother columns all look structurally identical in flattened
 OCR text: each is just "a name followed by a number." This is exactly why they
-get swapped. Before assigning any name+number block to a column, check it
-against this rule — it is not optional:
+get swapped — and on a form with only ONE child row, there is no cross-row
+pattern to lean on, so the ONLY reliable anchor is the header label itself.
 
-- Look at the SAME number across ALL rows of the table (if there is more than
-  one row). If that number is IDENTICAL in every row → it is a PARENT number
-  (father or mother), never the child's. If it is DIFFERENT per row (or there
-  is only one row) → it is the CHILD's registration number.
-- Never place a parent's name+number pair into a child cell, and never place
-  the child's name+registration number into a parent cell — even if the OCR
-  text's physical ordering makes them appear adjacent or swapped relative to
-  where you expect them.
-- A child's name and a mother's name being similar-sounding, identical, or
-  printed near each other in the flattened text is NOT evidence they are the
-  same field — verify using the repeating-number test above, not proximity
-  or guesswork.
-- If you cannot tell, from the text alone, which block belongs to the child
-  vs. the mother for a given row, leave that row's child_name /
-  child_registration_number null with confidence 0 — do NOT default to
-  whichever block appears first or nearest.
+- The header label immediately governs what follows it. Text that comes after
+  بچے کا نام اور رجسٹریشن نمبر (child name + registration) is the CHILD's,
+  full stop — regardless of whether that name looks similar to, or sits near,
+  the mother's or applicant's name elsewhere in the text.
+- Text that comes after والدہ کا نام اور شناختی کارڈ نمبر (mother name + CNIC)
+  is the MOTHER's — never copy it into the child slot even if the mother is
+  also the applicant and her name/CNIC legitimately repeats elsewhere in the
+  document (applicant section, etc.). Each label's own following text is the
+  only valid source for that label's fields.
+- Do NOT let a name matching the applicant's or mother's name elsewhere in the
+  document cause you to substitute the mother's CNIC for the child's
+  registration number, or vice versa. A shared name is normal (a mother can
+  be the applicant); it is never a reason to swap in a different field's
+  number.
+- Only when there are 2+ child rows, use this as an extra check: a number
+  that repeats identically across every row is a parent's, one that differs
+  per row is the child's. This confirms the header-based reading above — it
+  does not override it, and it does not apply at all to single-row forms.
+- If the header label's own following text is genuinely absent or unreadable
+  for a field, set it null with confidence 0 — do NOT fill it from a
+  different label's text just because a value is expected there.
 
 FATHER CNIC — DO NOT SKIP:
 - Each father/mother table cell contains TWO lines of text: the name, then the CNIC number below it. Extract BOTH into the cell's "name" and "cnic" keys.
 - The father cell is read with the exact same care as the mother cell. If you can find and extract the mother's CNIC digits from her cell, apply that same effort to the father's cell — do not leave "cnic" empty for father while filling it for mother.
 - Only leave a cell's "cnic" null if the OCR text genuinely contains no legible number for that cell — never because the name line was the only part you looked at.
+
+═══════════════════════════════════════════════════════════════
+FATHER vs MOTHER — WALID vs WALIDAH (character-level check, not optional)
+═══════════════════════════════════════════════════════════════
+
+The single most common column-swap in this document is father's name/CNIC
+landing in the mother's fields, or vice versa, or both ending up copied into
+the applicant. The header words look almost identical — check them letter
+by letter every time, using this exact breakdown:
+
+- والد (WALID = father) is FOUR letters: و ا ل د — it ends in د (daal).
+  Example header: والد کا نام اور شناختی کارڈ نمبر
+- والدہ (WALIDAH = mother) is FIVE letters: و ا ل د ہ — it has ONE extra
+  letter, ہ (heh), at the end. Example header: والدہ کا نام اور شناختی کارڈ نمبر
+- If OCR renders the header without a clear trailing ہ → treat it as والد
+  (father). If OCR renders it WITH a trailing ہ → treat it as والدہ (mother).
+  This single extra letter is the ONLY reliable way to tell the two headers
+  apart — they are otherwise identical. Do not guess from column position,
+  row order, or which name "sounds like" a father's or mother's name.
+- Do this check independently for EVERY occurrence of a والد/والدہ-rooted
+  header in the text (top section, table header row) before assigning any
+  name/CNIC pair to father_name/father_cnic or mother_name/mother_cnic.
+
+KNOWN FAILURE MODES TO ACTIVELY AVOID:
+- Father's name/CNIC ending up written into the mother_name/mother_cnic
+  fields (or the reverse) — prevented by the letter-count check above.
+- Mother's name/CNIC leaking into applicant_name/applicant_cnic_number just
+  because the mother is often the applicant — the applicant fields come
+  ONLY from the درخواست دہندہ label's own text (see next section), never
+  copied from the mother cell even when the values would end up identical.
+- Mother's own row cell being left null/empty while her data appears only
+  under applicant — if the والدہ column itself has readable name/CNIC text,
+  it MUST populate mother_name/mother_cnic_number directly, independent of
+  whatever the applicant fields end up being.
 
 Also extract from the top section (before the table):
 - crc_number, applicant_name, applicant_cnic_number (label: درخواست دہندہ)
@@ -197,6 +236,56 @@ OUTPUT — return ONLY this JSON, no markdown, no explanation
                    "mother_name": 0-1, "mother_cnic_number": 0-1}}]
   }}
 }}{target_instruction}
+
+═══════════════════════════════════════════════════════════════
+RAW OCR TEXT TO STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+{raw_ocr_text}"""
+
+
+def build_death_certificate_text_structuring_prompt(raw_ocr_text: str, doc_schema: dict) -> str:
+    """
+    Build the Qwen-plus prompt that structures OCR.space's raw English-OCR
+    death certificate text into the flat schema in extraction_schemas.json,
+    so validate_extraction() runs unchanged.
+    """
+    import json as _json
+    schema_json = _json.dumps(doc_schema, indent=2, ensure_ascii=False)
+
+    return f"""You are a document data extraction assistant. You will structure OCR-extracted
+text from a Pakistani Death Registration Certificate into JSON. The certificate is
+printed bilingually (English + Urdu); the OCR text below was extracted in English only.
+{_TEXT_SOURCE_CAVEAT}
+═══════════════════════════════════════════════════════════════
+THIS DOCUMENT HAS THREE DIFFERENT NUMBERS — DO NOT CONFUSE THEM
+═══════════════════════════════════════════════════════════════
+
+A death certificate prints up to three distinct identifiers. Only ONE of
+them is "registration_number" — the other two must NEVER be used for it:
+
+- "Tracking Id" (a long numeric string, e.g. 91100012359161) — this is a
+  system tracking ID, NOT the registration number. Do not use it.
+- "CRMS No" (an alphanumeric code, e.g. D197413448) — this is the CRMS
+  system's own reference number, NOT the registration number. Do not use it.
+- "OLD/M REG #" — a short, often HANDWRITTEN number near the top of the
+  certificate (e.g. a number like 874 written by hand, not printed). THIS
+  is the correct value for registration_number.
+
+If the OCR text does not clearly contain a value explicitly labeled
+"OLD/M REG" (or a close OCR variant of that label), set registration_number
+to null with confidence 0 — do NOT substitute the Tracking Id or CRMS No
+just because a number is expected there.
+
+═══════════════════════════════════════════════════════════════
+NULL OVER GUESS
+═══════════════════════════════════════════════════════════════
+If the OCR text clearly supports a value, extract it exactly. If garbled,
+ambiguous, or absent, set null with confidence 0. Do not guess, do not
+reconstruct missing digits, do not substitute a common name.
+
+Return ONLY this JSON schema, no markdown, no explanation:
+{schema_json}
 
 ═══════════════════════════════════════════════════════════════
 RAW OCR TEXT TO STRUCTURE

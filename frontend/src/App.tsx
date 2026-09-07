@@ -26,6 +26,8 @@ const App: React.FC = () => {
   const [extractedData, setExtractedData] = useState<Record<string, any>>({});
   const [crossChecks, setCrossChecks] = useState<CrossCheckResult[]>([]);
   const [reviewedDocs, setReviewedDocs] = useState<Set<DocType>>(new Set());
+  const [targetChildName, setTargetChildName] = useState('');
+  const [targetChildRegNumber, setTargetChildRegNumber] = useState('');
   const [currentCaseId, setCurrentCaseId] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -147,6 +149,10 @@ const App: React.FC = () => {
                 onStartTimer={() => setIsTimerRunning(true)}
                 onProceed={() => setIntakeStep(2)}
                 isDualLanguage={isDualLanguage}
+                targetChildName={targetChildName}
+                setTargetChildName={setTargetChildName}
+                targetChildRegNumber={targetChildRegNumber}
+                setTargetChildRegNumber={setTargetChildRegNumber}
               />
             )}
             {currentTab === 'intake' && intakeStep === 2 && (
