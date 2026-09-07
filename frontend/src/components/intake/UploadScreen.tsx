@@ -118,7 +118,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
         slotId,
         undefined,
         isCnicSlot ? cnicFormats[slotId] : undefined,
-        slotId === 'b_form' && targetChildRegNumber.trim() ? targetChildRegNumber.trim() : undefined
+        slotId === 'b_form' && targetChildRegNumber.trim() ? targetChildRegNumber.trim() : undefined,
+        slotId === 'b_form' && targetChildName.trim() ? targetChildName.trim() : undefined
       );
 
       updateSlot(slotId, { status: 'done' });

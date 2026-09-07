@@ -42,6 +42,11 @@ class ExtractionRequest(BaseModel):
     # rather than trusted to a model guess. target_child_serial_number above
     # is legacy/deprecated.
     target_child_registration_number: Optional[str] = None
+    # FSO-entered target child's name — used only for a post-extraction
+    # cross-check against the B-form's own child_name and the result
+    # card's child_name, to flag a conflict before submission. Never used
+    # to select or override which child row is the target.
+    target_child_name: Optional[str] = None
     # "old" or "new" — required (meaningfully) only for mother_cnic/father_cnic.
     # "old" routes to OCR.space + Qwen-plus text structuring; "new" or None
     # keeps the existing Qwen-VL vision path. Ignored for all other doc types.

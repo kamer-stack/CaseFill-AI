@@ -303,6 +303,12 @@ async def run_extraction(
         if isinstance(extracted, dict):
             if req.doc_type == "b_form":
                 extracted = postprocess_bform(extracted, raw_model_text=raw_model_text)
+                # Stash the FSO's own entry for the target child so the
+                # cross-check step can compare it against what was actually
+                # read off the B-form / result card — never used to pick
+                # or override the target child itself.
+                if req.target_child_name and req.target_child_name.strip():
+                    extracted["_fso_target_child_name"] = req.target_child_name.strip()
             elif req.doc_type in ("father_cnic", "mother_cnic"):
                 extracted = postprocess_cnic(extracted, req.doc_type)
             extracted = validate_extraction(req.doc_type, extracted)

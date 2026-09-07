@@ -85,7 +85,8 @@ export const casesApi = {
     docType: string,
     targetChildSerial?: number,
     cnicFormat?: 'old' | 'new',
-    targetChildRegistrationNumber?: string
+    targetChildRegistrationNumber?: string,
+    targetChildName?: string
   ) =>
     request<{ doc_type: string; extracted: any; model: string; duration_ms: number }>(
       `/api/cases/${caseId}/extract`,
@@ -95,6 +96,7 @@ export const casesApi = {
           doc_type: docType,
           target_child_serial_number: targetChildSerial,
           target_child_registration_number: targetChildRegistrationNumber,
+          target_child_name: targetChildName,
           cnic_format: cnicFormat,
         }),
       }

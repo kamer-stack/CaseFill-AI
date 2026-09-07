@@ -212,4 +212,31 @@ def run_cross_checks(documents: dict) -> list[dict]:
             "similarity": None,
         })
 
+    # 7. FSO-entered target child name vs B-form's own child_name, and vs
+    #    the result card's child_name. Only runs when the FSO actually typed
+    #    a name (optional field) — never blocks anything on its own, just
+    #    surfaces a flag like every other check here.
+    fso_name = get_field(documents.get("b_form"), "_fso_target_child_name")
+    if fso_name:
+        b_form_children = get_field(documents.get("b_form"), "children") or []
+        target_child = next(
+            (c for c in b_form_children if isinstance(c, dict) and c.get("is_target_child")),
+            None,
+        )
+        b_form_child_name = target_child.get("child_name") if target_child else None
+
+        checks.append({
+            "label": "Child name (FSO entry vs B-form)",
+            "source": {"doc": "b_form", "field": "_fso_target_child_name"},
+            "target": {"doc": "b_form", "field": "children.child_name"},
+            **compare_names(fso_name, b_form_child_name),
+        })
+
+        checks.append({
+            "label": "Child name (FSO entry vs Result Card)",
+            "source": {"doc": "b_form", "field": "_fso_target_child_name"},
+            "target": {"doc": "result_card", "field": "child_name"},
+            **compare_names(fso_name, get_field(documents.get("result_card"), "child_name")),
+        })
+
     return checks
