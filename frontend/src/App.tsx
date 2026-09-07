@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppUser, UserRole, INITIAL_DOCUMENT_SLOTS, DocumentSlotConfig, CrossCheckResult, DocType } from './types';
-import { authApi, setAuthToken, getAuthToken } from './lib/api';
+import { authApi, casesApi, setAuthToken, getAuthToken } from './lib/api';
 import { LandingPage } from './components/public/LandingPage';
 import { AuthModal } from './components/public/AuthModal';
 import { Header } from './components/shared/Header';
@@ -12,6 +12,81 @@ import { FSOQueueScreen } from './components/fso/FSOQueueScreen';
 import { FamilyPortal } from './components/family/FamilyPortal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { Sparkles } from 'lucide-react';
+
+// ── Intake session persistence ──────────────────────────────────────────────
+// Survives a browser/tab reload (device sleep, tab discard, accidental
+// refresh, etc.) so an in-progress case is resumed instead of lost. Only a
+// small pointer is stored here — the actual uploaded files and extracted
+// data already live on the backend per case_documents row; on restore we
+// refetch the case and rebuild slots/extractedData from that.
+const INTAKE_SESSION_KEY = 'casefill_intake_session';
+
+interface PersistedIntakeSession {
+  currentTab: 'queue' | 'intake' | 'archive' | 'admin';
+  intakeStep: 1 | 2 | 3;
+  currentCaseId: string | null;
+  targetChildName: string;
+  targetChildRegNumber: string;
+}
+
+function loadIntakeSession(): PersistedIntakeSession | null {
+  try {
+    const raw = localStorage.getItem(INTAKE_SESSION_KEY);
+    return raw ? (JSON.parse(raw) as PersistedIntakeSession) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveIntakeSession(session: PersistedIntakeSession) {
+  try {
+    localStorage.setItem(INTAKE_SESSION_KEY, JSON.stringify(session));
+  } catch {
+    // storage unavailable (private mode, quota) — resume just won't work
+  }
+}
+
+function clearIntakeSession() {
+  try {
+    localStorage.removeItem(INTAKE_SESSION_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+// Rebuild slots + extractedData for an in-progress case from the backend's
+// own record of it, rather than trying to serialize File objects/blobs
+// client-side (which can't survive a reload anyway).
+function rebuildFromCase(caseRecord: any): { slots: DocumentSlotConfig[]; extractedData: Record<string, any> } {
+  const documents = caseRecord.documents || {};
+  const extractedData: Record<string, any> = {};
+
+  const slots = INITIAL_DOCUMENT_SLOTS.map((base) => {
+    const doc = documents[base.id];
+    if (!doc) return { ...base };
+
+    if (doc.extracted_json != null) {
+      extractedData[base.id] = doc.extracted_json;
+    }
+
+    const status = doc.status as DocumentSlotConfig['status'];
+    // In-flight statuses ('uploading' / 'extracting') can't be resumed —
+    // the request died with the reload — so treat them as empty again
+    // rather than stranding the slot in a spinner state forever.
+    const resumedStatus: DocumentSlotConfig['status'] =
+      status === 'uploading' || status === 'extracting' ? 'empty' : status || 'empty';
+
+    return {
+      ...base,
+      status: resumedStatus,
+      file: doc.imageUrl ? { name: doc.original_filename || base.title, previewUrl: doc.imageUrl } : undefined,
+      notProvidedReason: doc.not_provided_reason || undefined,
+      errorMessage: undefined,
+    };
+  });
+
+  return { slots, extractedData };
+}
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
@@ -31,19 +106,64 @@ const App: React.FC = () => {
   const [currentCaseId, setCurrentCaseId] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isRestoringSession, setIsRestoringSession] = useState(false);
 
   // Admin tab
   const [adminTab, setAdminTab] = useState<string>('all_cases');
 
-  // Check stored session on mount
+  // Check stored session on mount, then attempt to resume any in-progress
+  // intake (see loadIntakeSession/rebuildFromCase above).
   useEffect(() => {
     const token = getAuthToken();
-    if (token) {
-      authApi.getMe()
-        .then(({ user }) => setCurrentUser(user))
-        .catch(() => setAuthToken(null));
+    if (!token) return;
+
+    const persisted = loadIntakeSession();
+    if (persisted?.currentTab === 'intake' && persisted.currentCaseId) {
+      setIsRestoringSession(true);
     }
+
+    authApi.getMe()
+      .then(async ({ user }) => {
+        setCurrentUser(user);
+
+        if (persisted?.currentTab === 'intake' && persisted.currentCaseId && (user.role === 'fso' || user.role === 'admin')) {
+          try {
+            const caseRecord = await casesApi.get(persisted.currentCaseId);
+            // Don't resume into a case that's already been submitted/verified —
+            // that flow is done; send the FSO back to the queue instead.
+            if (caseRecord.status === 'draft') {
+              const { slots: rebuiltSlots, extractedData: rebuiltData } = rebuildFromCase(caseRecord);
+              setSlots(rebuiltSlots);
+              setExtractedData(rebuiltData);
+              setCurrentCaseId(persisted.currentCaseId);
+              setTargetChildName(persisted.targetChildName || '');
+              setTargetChildRegNumber(persisted.targetChildRegNumber || '');
+              setCurrentTab('intake');
+              setIntakeStep(persisted.intakeStep || 1);
+            } else {
+              clearIntakeSession();
+            }
+          } catch {
+            // Case no longer fetchable (deleted, network issue) — drop the
+            // stale pointer rather than getting stuck retrying it forever.
+            clearIntakeSession();
+          }
+        }
+      })
+      .catch(() => setAuthToken(null))
+      .finally(() => setIsRestoringSession(false));
   }, []);
+
+  // Persist the intake session pointer on every relevant change so a reload
+  // can resume it. Only meaningful while actually in the intake flow.
+  useEffect(() => {
+    if (!currentUser) return;
+    if (currentTab === 'intake') {
+      saveIntakeSession({ currentTab, intakeStep, currentCaseId, targetChildName, targetChildRegNumber });
+    } else {
+      clearIntakeSession();
+    }
+  }, [currentUser, currentTab, intakeStep, currentCaseId, targetChildName, targetChildRegNumber]);
 
   // Timer
   useEffect(() => {
@@ -73,6 +193,7 @@ const App: React.FC = () => {
     setCurrentCaseId(null);
     setElapsedSeconds(0);
     setIsTimerRunning(false);
+    clearIntakeSession();
   };
 
   const startIntake = () => {
@@ -104,6 +225,19 @@ const App: React.FC = () => {
           isDualLanguage={isDualLanguage}
         />
       </>
+    );
+  }
+
+  // Briefly shown only when resuming an in-progress case after a reload,
+  // instead of flashing the queue screen before the case data loads.
+  if (isRestoringSession) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500">Resuming your in-progress case...</p>
+        </div>
+      </div>
     );
   }
 
