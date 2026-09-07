@@ -26,6 +26,9 @@ interface UploadScreenProps {
   isDualLanguage: boolean;
 }
 
+// 13-digit Pakistani CNIC, e.g. 00000-0000000-0
+const CNIC_FORMAT_RE = /^\d{5}-\d{7}-\d{1}$/;
+
 const EDUCATION_OPTIONS = [
   { value: 'none', label: 'None', urdu: 'کوئی نہیں' },
   { value: 'primary', label: 'Primary', urdu: 'پرائمری' },
@@ -52,6 +55,14 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
   const [educationText, setEducationText] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Only flag the CNIC as invalid once it's fully typed (13 digits) —
+  // never mid-keystroke, since a partial value is expected to look
+  // "incomplete" while the FSO is still writing it.
+  const targetChildCnicDigitCount = targetChildRegNumber.replace(/\D/g, '').length;
+  const targetChildCnicComplete = targetChildCnicDigitCount >= 13;
+  const targetChildCnicValid = CNIC_FORMAT_RE.test(targetChildRegNumber.trim());
+  const targetChildCnicShowError = targetChildCnicComplete && !targetChildCnicValid;
 
   // CNIC format toggle — determines extraction route on the backend:
   // "old" -> OCR.space + Qwen-plus text structuring (no printed English
@@ -236,22 +247,29 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
         <label className="text-sm font-semibold text-slate-700 block mb-2">
           {isDualLanguage
-            ? "Target Child's Registration Number — بچے کا رجسٹریشن نمبر"
-            : "Target Child's Registration Number"}
+            ? "Target Child's CNIC — بچے کا شناختی کارڈ نمبر"
+            : "Target Child's CNIC"}
         </label>
         <input
           type="text"
           value={targetChildRegNumber}
           onChange={(e) => setTargetChildRegNumber(e.target.value)}
-          placeholder="e.g. 99-2024-333333"
-          className="w-56 px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 outline-none"
+          placeholder="e.g. 00000-0000000-0"
+          className={`w-56 px-3 py-2 border rounded-xl text-sm focus:ring-2 outline-none ${
+            targetChildCnicShowError
+              ? 'border-rose-400 focus:ring-rose-500/30 focus:border-rose-500'
+              : 'border-slate-300 focus:ring-indigo-500/30 focus:border-indigo-500'
+          }`}
         />
         <p className="text-xs text-slate-400 mt-1">
-          Read this directly off the physical B-Form's child column — more
-          reliable than counting table rows. We match it automatically
-          after extraction; if it doesn't match, you'll be asked to pick
-          the right child manually.
+          13 digits, format 00000-0000000-0. We use it to auto-match the
+          right child after extraction and flag it if it doesn't match.
         </p>
+        {targetChildCnicShowError && (
+          <p className="text-xs text-rose-500 mt-1">
+            That doesn't look like a valid CNIC — check the format.
+          </p>
+        )}
       </div>
 
       {/* Upload Grid */}
