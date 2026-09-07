@@ -427,33 +427,38 @@ function ExtractedFields({
         <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> {isDualLanguage ? 'غلط ممکن (&lt;۷۰٪)' : 'Likely wrong (<70%)'}</span>
       </div>
       <div className="divide-y divide-slate-50">
-        {/* Orphan Name / Orphan CNIC — pulled from the matched target child's
-            own extracted fields, shown first so the case's actual orphan is
-            never confused with the form's applicant/guardian fields below. */}
+        {/* Orphan Name / Orphan CNIC — the matched target child if the FSO's
+            registration number matched, otherwise the sole child on a
+            single-row form (the common case). */}
         {Array.isArray(data.children) &&
-          (data.children as Record<string, any>[])
-            .filter((child) => child.is_target_child)
-            .slice(0, 1)
-            .map((child, i) => (
+          (() => {
+            const kids = data.children as Record<string, any>[];
+            const target =
+              kids.find((c) => c.is_target_child) ??
+              (kids.length === 1 ? kids[0] : undefined);
+            if (!target) return null;
+            const idx = kids.indexOf(target);
+            return (
               <React.Fragment key="orphan-header-fields">
                 <FieldRow
                   docType={docType}
-                  fieldKey={`children.${i}.child_name`}
+                  fieldKey={`children.${idx}.child_name`}
                   label="Orphan Name"
-                  value={child.child_name}
+                  value={target.child_name}
                   confidence={undefined}
                   onEdit={onEdit}
                 />
                 <FieldRow
                   docType={docType}
-                  fieldKey={`children.${i}.child_registration_number`}
+                  fieldKey={`children.${idx}.child_registration_number`}
                   label="Orphan CNIC"
-                  value={child.child_registration_number}
+                  value={target.child_registration_number}
                   confidence={undefined}
                   onEdit={onEdit}
                 />
               </React.Fragment>
-            ))}
+            );
+          })()}
 
         {Object.entries(data)
           .filter(([k]) => !k.startsWith('_') && k !== 'confidence' && k !== 'children')
