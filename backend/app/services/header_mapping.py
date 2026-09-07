@@ -391,14 +391,14 @@ def match_target_child(result: dict, target_registration_number: str | None) -> 
     else:
         result["_target_child_match_status"] = "no_match"
 
-    # "applicant" in this app means the orphan, not the form's filer.
-    # Always reflect the orphan's own OCR-read name/registration number here
-    # — the matched child if matching succeeded, otherwise the only child
-    # on a single-row form (the common case), never the raw OCR applicant
-    # read (which is where the mother/father section leaks in).
-    target_child = matches[0] if len(matches) == 1 else (children[0] if len(children) == 1 else None)
-    if isinstance(target_child, dict):
-        result["applicant_name"] = target_child.get("child_name")
-        result["applicant_cnic_number"] = target_child.get("child_registration_number")
+    # applicant_name / applicant_cnic_number are left exactly as the model
+    # extracted them from the form's own "درخواست دہندہ" (applicant/filer)
+    # field — this is the guardian who submitted the form, NOT the orphan.
+    # Do not overwrite with target_child data here; the orphan's own name/
+    # registration number is surfaced separately via the matched child row
+    # (see match_target_child's is_target_child flag / the Orphan Name and
+    # Orphan CNIC fields in the review UI). Overwriting applicant_* with
+    # child data previously corrupted the applicant/guardian fields and
+    # made the applicant-vs-father CNIC consistency flag meaningless.
 
     return result

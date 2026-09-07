@@ -427,6 +427,34 @@ function ExtractedFields({
         <span className="inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> {isDualLanguage ? 'غلط ممکن (&lt;۷۰٪)' : 'Likely wrong (<70%)'}</span>
       </div>
       <div className="divide-y divide-slate-50">
+        {/* Orphan Name / Orphan CNIC — pulled from the matched target child's
+            own extracted fields, shown first so the case's actual orphan is
+            never confused with the form's applicant/guardian fields below. */}
+        {Array.isArray(data.children) &&
+          (data.children as Record<string, any>[])
+            .filter((child) => child.is_target_child)
+            .slice(0, 1)
+            .map((child, i) => (
+              <React.Fragment key="orphan-header-fields">
+                <FieldRow
+                  docType={docType}
+                  fieldKey={`children.${i}.child_name`}
+                  label="Orphan Name"
+                  value={child.child_name}
+                  confidence={undefined}
+                  onEdit={onEdit}
+                />
+                <FieldRow
+                  docType={docType}
+                  fieldKey={`children.${i}.child_registration_number`}
+                  label="Orphan CNIC"
+                  value={child.child_registration_number}
+                  confidence={undefined}
+                  onEdit={onEdit}
+                />
+              </React.Fragment>
+            ))}
+
         {Object.entries(data)
           .filter(([k]) => !k.startsWith('_') && k !== 'confidence' && k !== 'children')
           .map(([key, value]) => (
@@ -434,6 +462,13 @@ function ExtractedFields({
               key={key}
               docType={docType}
               fieldKey={key}
+              label={
+                key === 'applicant_name'
+                  ? 'Applicant Name (Guardian)'
+                  : key === 'applicant_cnic_number'
+                  ? 'Applicant CNIC Number (Guardian)'
+                  : undefined
+              }
               value={value}
               confidence={confidence[key]}
               onEdit={onEdit}
