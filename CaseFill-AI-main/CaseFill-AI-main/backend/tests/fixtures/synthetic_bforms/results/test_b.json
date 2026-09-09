@@ -1,0 +1,236 @@
+{
+  "test_id": "b",
+  "image": "test_b.png",
+  "model": "qwen-vl-max",
+  "duration_ms": 16782,
+  "prompt_length_chars": 13230,
+  "prompt_banned_token_leaks": [],
+  "ground_truth": {
+    "scenario": "Applicant == father (legitimately same)",
+    "crc_number": "99-TEST-B-2024",
+    "applicant_name": "Barkat Ali Hashmi",
+    "applicant_cnic_number": "99201-7333333-3",
+    "father_name": "Barkat Ali Hashmi",
+    "father_cnic_number": "99201-7333333-3",
+    "mother_name": "Hoorain Barkat",
+    "mother_cnic_number": "99202-8444444-4",
+    "children": [
+      {
+        "serial_number": 1,
+        "child_name": "Saad Barkat",
+        "child_registration_number": "99-2024-333333",
+        "gender_relation": "son",
+        "date_of_birth": "22-07-2019"
+      }
+    ]
+  },
+  "raw_extracted": {
+    "crc_number": "TEST-B-2024-99",
+    "applicant_name": "برکت علی پاشمی",
+    "applicant_cnic_number": "99201-7333333-3",
+    "father_name": "برکت علی پاشمی",
+    "father_cnic_number": "99201-7333333-3",
+    "mother_name": "سعد برکت",
+    "mother_cnic_number": "99-2024-333333",
+    "children": [
+      {
+        "serial_number": 1,
+        "child_name": "حوریان برکت",
+        "child_registration_number": "99202-8444444-4",
+        "gender_relation": "بٹا",
+        "date_of_birth": "22-07-2019",
+        "remarks": "—"
+      }
+    ],
+    "confidence": {
+      "crc_number": 1,
+      "applicant_name": 1,
+      "applicant_cnic_number": 1,
+      "father_name": 1,
+      "father_cnic_number": 1,
+      "mother_name": 1,
+      "mother_cnic_number": 1,
+      "children": [
+        {
+          "serial_number": 1,
+          "child_name": 1,
+          "child_registration_number": 1,
+          "gender_relation": 1,
+          "date_of_birth": 1,
+          "remarks": 1
+        }
+      ]
+    },
+    "_column_headers_read": {
+      "col1": "نمبر شمار",
+      "col2": "والد کا نام اور شناختی کارڈ نمبر",
+      "col3": "والدہ کا نام اور شناختی کارڈ نمبر",
+      "col4": "جنس / رشتہ",
+      "col5": "تاریخ پیدائش",
+      "col6": "معذوری",
+      "col7": "نمبر شمار"
+    },
+    "_consistency_check": {
+      "applicant_cnic_matches_father_cnic": true,
+      "applicant_cnic_read": "99201-7333333-3",
+      "father_cnic_read": "99201-7333333-3"
+    },
+    "_raw_father_name_urdu": "برکت علی پاشمی",
+    "_raw_mother_name_urdu": "سعد برکت",
+    "_raw_child_names_urdu": [
+      "حوریان برکت"
+    ]
+  },
+  "raw_model_text": "{\n  \"crc_number\": \"TEST-B-2024-99\",\n  \"applicant_name\": \"برکت علی پاشمی\",\n  \"applicant_cnic_number\": \"99201-7333333-3\",\n  \"father_name\": \"برکت علی پاشمی\",\n  \"father_cnic_number\": \"99201-7333333-3\",\n  \"mother_name\": \"سعد برکت\",\n  \"mother_cnic_number\": \"99-2024-333333\",\n  \"children\": [\n    {\n      \"serial_number\": 1,\n      \"child_name\": \"حوریان برکت\",\n      \"child_registration_number\": \"99202-8444444-4\",\n      \"gender_relation\": \"بٹا\",\n      \"date_of_birth\": \"22-07-2019\",\n      \"remarks\": \"—\"\n    }\n  ],\n  \"confidence\": {\n    \"crc_number\": 1,\n    \"applicant_name\": 1,\n    \"applicant_cnic_number\": 1,\n    \"father_name\": 1,\n    \"father_cnic_number\": 1,\n    \"mother_name\": 1,\n    \"mother_cnic_number\": 1,\n    \"children\": [\n      {\n        \"serial_number\": 1,\n        \"child_name\": 1,\n        \"child_registration_number\": 1,\n        \"gender_relation\": 1,\n        \"date_of_birth\": 1,\n        \"remarks\": 1\n      }\n    ]\n  },\n  \"_column_headers_read\": {\n    \"col1\": \"نمبر شمار\",\n    \"col2\": \"والد کا نام اور شناختی کارڈ نمبر\",\n    \"col3\": \"والدہ کا نام اور شناختی کارڈ نمبر\",\n    \"col4\": \"جنس / رشتہ\",\n    \"col5\": \"تاریخ پیدائش\",\n    \"col6\": \"معذوری\",\n    \"col7\": \"نمبر شمار\"\n  },\n  \"_consistency_check\": {\n    \"applicant_cnic_matches_father_cnic\": true,\n    \"applicant_cnic_read\": \"99201-7333333-3\",\n    \"father_cnic_read\": \"99201-7333333-3\"\n  },\n  \"_raw_father_name_urdu\": \"برکت علی پاشمی\",\n  \"_raw_mother_name_urdu\": \"سعد برکت\",\n  \"_raw_child_names_urdu\": [\n    \"حوریان برکت\"\n  ]\n}",
+  "postprocessed": {
+    "crc_number": "TEST-B-2024-99",
+    "applicant_name": "برکت علی پاشمی",
+    "applicant_cnic_number": "99201-7333333-3",
+    "father_name": "برکت علی پاشمی",
+    "father_cnic_number": "99201-7333333-3",
+    "mother_name": "سعد برکت",
+    "mother_cnic_number": "99-2024-333333",
+    "children": [
+      {
+        "serial_number": 1,
+        "child_name": "حوریان برکت",
+        "child_registration_number": "99202-8444444-4",
+        "gender_relation": "بٹا",
+        "date_of_birth": "22-07-2019",
+        "remarks": "—"
+      }
+    ],
+    "confidence": {
+      "crc_number": 1,
+      "applicant_name": 1,
+      "applicant_cnic_number": 1.0,
+      "father_name": 0,
+      "father_cnic_number": 1.0,
+      "mother_name": 0,
+      "mother_cnic_number": 0,
+      "children": [
+        {
+          "serial_number": 1,
+          "child_name": 1,
+          "child_registration_number": 1,
+          "gender_relation": 1,
+          "date_of_birth": 1,
+          "remarks": 1
+        }
+      ]
+    },
+    "_column_headers_read": {
+      "col1": "نمبر شمار",
+      "col2": "والد کا نام اور شناختی کارڈ نمبر",
+      "col3": "والدہ کا نام اور شناختی کارڈ نمبر",
+      "col4": "جنس / رشتہ",
+      "col5": "تاریخ پیدائش",
+      "col6": "معذوری",
+      "col7": "نمبر شمار"
+    },
+    "_consistency_check": {
+      "applicant_cnic_matches_father_cnic": true,
+      "applicant_cnic_read": "99201-7333333-3",
+      "father_cnic_read": "99201-7333333-3"
+    },
+    "_raw_father_name_urdu": "برکت علی پاشمی",
+    "_raw_mother_name_urdu": "سعد برکت",
+    "_raw_child_names_urdu": [
+      "حوریان برکت"
+    ],
+    "_column_corrections": [
+      "FLAG mother_cnic_number: value '99-2024-333333' is not a valid CNIC; postprocessor will not reconstruct missing digits from per-row data or another CNIC (NEEDS_REVIEW)",
+      "FLAG mother_name: 'سعد برکت' does not match transliteration of _raw_mother_name_urdu ('سعد برکت' → 'Saad Barkat', similarity 0.11); likely hallucinated (NEEDS_REVIEW)",
+      "FLAG father_name: 'برکت علی پاشمی' does not match transliteration of _raw_father_name_urdu ('برکت علی پاشمی' → 'Barkat Ali Pashmi', similarity 0.13); likely hallucinated (NEEDS_REVIEW)"
+    ]
+  },
+  "validated": {
+    "crc_number": "TEST-B-2024-99",
+    "applicant_name": "برکت علی پاشمی",
+    "applicant_cnic_number": "99201-7333333-3",
+    "father_name": "برکت علی پاشمی",
+    "father_cnic_number": "99201-7333333-3",
+    "mother_name": "سعد برکت",
+    "mother_cnic_number": "99-2024-333333",
+    "children": [
+      {
+        "serial_number": 1,
+        "child_name": "حوریان برکت",
+        "child_registration_number": "99202-8444444-4",
+        "gender_relation": "بٹا",
+        "date_of_birth": "22-07-2019",
+        "remarks": "—"
+      }
+    ],
+    "confidence": {
+      "crc_number": 0,
+      "applicant_name": 1,
+      "applicant_cnic_number": 1.0,
+      "father_name": 0,
+      "father_cnic_number": 1.0,
+      "mother_name": 0,
+      "mother_cnic_number": 0,
+      "children": [
+        {
+          "serial_number": 1,
+          "child_name": 1,
+          "child_registration_number": 1,
+          "gender_relation": 1,
+          "date_of_birth": 1,
+          "remarks": 1
+        }
+      ]
+    },
+    "_column_headers_read": {
+      "col1": "نمبر شمار",
+      "col2": "والد کا نام اور شناختی کارڈ نمبر",
+      "col3": "والدہ کا نام اور شناختی کارڈ نمبر",
+      "col4": "جنس / رشتہ",
+      "col5": "تاریخ پیدائش",
+      "col6": "معذوری",
+      "col7": "نمبر شمار"
+    },
+    "_consistency_check": {
+      "applicant_cnic_matches_father_cnic": true,
+      "applicant_cnic_read": "99201-7333333-3",
+      "father_cnic_read": "99201-7333333-3"
+    },
+    "_raw_father_name_urdu": "برکت علی پاشمی",
+    "_raw_mother_name_urdu": "سعد برکت",
+    "_raw_child_names_urdu": [
+      "حوریان برکت"
+    ],
+    "_column_corrections": [
+      "FLAG mother_cnic_number: value '99-2024-333333' is not a valid CNIC; postprocessor will not reconstruct missing digits from per-row data or another CNIC (NEEDS_REVIEW)",
+      "FLAG mother_name: 'سعد برکت' does not match transliteration of _raw_mother_name_urdu ('سعد برکت' → 'Saad Barkat', similarity 0.11); likely hallucinated (NEEDS_REVIEW)",
+      "FLAG father_name: 'برکت علی پاشمی' does not match transliteration of _raw_father_name_urdu ('برکت علی پاشمی' → 'Barkat Ali Pashmi', similarity 0.13); likely hallucinated (NEEDS_REVIEW)"
+    ],
+    "_validation_errors": [
+      {
+        "field": "crc_number",
+        "error": "Registration number must contain only digits and dashes (got 'TEST-B-2024-99')",
+        "raw_value": "TEST-B-2024-99"
+      },
+      {
+        "field": "mother_cnic_number",
+        "error": "CNIC must be in format XXXXX-XXXXXXX-X (got '99-2024-333333')",
+        "raw_value": "99-2024-333333"
+      },
+      {
+        "field": "mother_cnic_number",
+        "error": "FLAG mother_cnic_number: value '99-2024-333333' is not a valid CNIC; postprocessor will not reconstruct missing digits from per-row data or another CNIC (NEEDS_REVIEW)",
+        "raw_value": "99-2024-333333"
+      },
+      {
+        "field": "mother_name",
+        "error": "FLAG mother_name: 'سعد برکت' does not match transliteration of _raw_mother_name_urdu ('سعد برکت' → 'Saad Barkat', similarity 0.11); likely hallucinated (NEEDS_REVIEW)",
+        "raw_value": "سعد برکت"
+      },
+      {
+        "field": "father_name",
+        "error": "FLAG father_name: 'برکت علی پاشمی' does not match transliteration of _raw_father_name_urdu ('برکت علی پاشمی' → 'Barkat Ali Pashmi', similarity 0.13); likely hallucinated (NEEDS_REVIEW)",
+        "raw_value": "برکت علی پاشمی"
+      }
+    ]
+  }
+}
