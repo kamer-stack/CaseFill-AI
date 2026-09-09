@@ -1,0 +1,248 @@
+{
+  "test_id": "c",
+  "image": "test_c.png",
+  "model": "qwen-vl-max",
+  "duration_ms": 14252,
+  "prompt_length_chars": 13230,
+  "prompt_banned_token_leaks": [],
+  "ground_truth": {
+    "scenario": "Applicant != father (mother is applicant)",
+    "crc_number": "99-TEST-C-2024",
+    "applicant_name": "Mahjabeen Parwaz",
+    "applicant_cnic_number": "99301-8555555-5",
+    "father_name": "Parwaz Hussain Shah",
+    "father_cnic_number": "99302-7666666-6",
+    "mother_name": "Mahjabeen Parwaz",
+    "mother_cnic_number": "99301-8555555-5",
+    "children": [
+      {
+        "serial_number": 1,
+        "child_name": "Yasir Parwaz",
+        "child_registration_number": "99-2024-555555",
+        "gender_relation": "son",
+        "date_of_birth": "10-11-2020"
+      }
+    ]
+  },
+  "raw_extracted": {
+    "crc_number": "TEST-C-2024-99",
+    "applicant_name": "م جبین پرواز",
+    "applicant_cnic_number": "99301-8555555-5",
+    "father_name": "پرواز حسین شاہ",
+    "father_cnic_number": "99302-7666666-6",
+    "mother_name": "یاس پرواز",
+    "mother_cnic_number": "99-2024-555555",
+    "children": [
+      {
+        "serial_number": 1,
+        "child_name": "م جبین پرواز",
+        "child_registration_number": "99301-8555555-5",
+        "gender_relation": "بٹا",
+        "date_of_birth": "10-11-2020",
+        "remarks": "—"
+      }
+    ],
+    "confidence": {
+      "crc_number": 1,
+      "applicant_name": 1,
+      "applicant_cnic_number": 1,
+      "father_name": 1,
+      "father_cnic_number": 1,
+      "mother_name": 1,
+      "mother_cnic_number": 1,
+      "children": [
+        {
+          "serial_number": 1,
+          "child_name": 1,
+          "child_registration_number": 1,
+          "gender_relation": 1,
+          "date_of_birth": 1,
+          "remarks": 1
+        }
+      ]
+    },
+    "_column_headers_read": {
+      "col1": "نمبر شمار",
+      "col2": "والد کا نام اور شناختی کارڈ نمبر",
+      "col3": "والدہ کا نام اور شناختی کارڈ نمبر",
+      "col4": "جنس / رشتہ",
+      "col5": "تاریخ پیدائش",
+      "col6": "معذوری",
+      "col7": "درخواست دیندہ کا نام"
+    },
+    "_consistency_check": {
+      "applicant_cnic_matches_father_cnic": false,
+      "applicant_cnic_read": "99301-8555555-5",
+      "father_cnic_read": "99302-7666666-6"
+    },
+    "_raw_father_name_urdu": "پرواز حسین شاہ",
+    "_raw_mother_name_urdu": "یاس پرواز",
+    "_raw_child_names_urdu": [
+      "م جبین پرواز"
+    ]
+  },
+  "raw_model_text": "{\n  \"crc_number\": \"TEST-C-2024-99\",\n  \"applicant_name\": \"م جبین پرواز\",\n  \"applicant_cnic_number\": \"99301-8555555-5\",\n  \"father_name\": \"پرواز حسین شاہ\",\n  \"father_cnic_number\": \"99302-7666666-6\",\n  \"mother_name\": \"یاس پرواز\",\n  \"mother_cnic_number\": \"99-2024-555555\",\n  \"children\": [\n    {\n      \"serial_number\": 1,\n      \"child_name\": \"م جبین پرواز\",\n      \"child_registration_number\": \"99301-8555555-5\",\n      \"gender_relation\": \"بٹا\",\n      \"date_of_birth\": \"10-11-2020\",\n      \"remarks\": \"—\"\n    }\n  ],\n  \"confidence\": {\n    \"crc_number\": 1,\n    \"applicant_name\": 1,\n    \"applicant_cnic_number\": 1,\n    \"father_name\": 1,\n    \"father_cnic_number\": 1,\n    \"mother_name\": 1,\n    \"mother_cnic_number\": 1,\n    \"children\": [\n      {\n        \"serial_number\": 1,\n        \"child_name\": 1,\n        \"child_registration_number\": 1,\n        \"gender_relation\": 1,\n        \"date_of_birth\": 1,\n        \"remarks\": 1\n      }\n    ]\n  },\n  \"_column_headers_read\": {\n    \"col1\": \"نمبر شمار\",\n    \"col2\": \"والد کا نام اور شناختی کارڈ نمبر\",\n    \"col3\": \"والدہ کا نام اور شناختی کارڈ نمبر\",\n    \"col4\": \"جنس / رشتہ\",\n    \"col5\": \"تاریخ پیدائش\",\n    \"col6\": \"معذوری\",\n    \"col7\": \"درخواست دیندہ کا نام\"\n  },\n  \"_consistency_check\": {\n    \"applicant_cnic_matches_father_cnic\": false,\n    \"applicant_cnic_read\": \"99301-8555555-5\",\n    \"father_cnic_read\": \"99302-7666666-6\"\n  },\n  \"_raw_father_name_urdu\": \"پرواز حسین شاہ\",\n  \"_raw_mother_name_urdu\": \"یاس پرواز\",\n  \"_raw_child_names_urdu\": [\n    \"م جبین پرواز\"\n  ]\n}",
+  "postprocessed": {
+    "crc_number": "TEST-C-2024-99",
+    "applicant_name": "م جبین پرواز",
+    "applicant_cnic_number": "99301-8555555-5",
+    "father_name": "پرواز حسین شاہ",
+    "father_cnic_number": "99302-7666666-6",
+    "mother_name": "یاس پرواز",
+    "mother_cnic_number": "99-2024-555555",
+    "children": [
+      {
+        "serial_number": 1,
+        "child_name": "م جبین پرواز",
+        "child_registration_number": "99301-8555555-5",
+        "gender_relation": "بٹا",
+        "date_of_birth": "10-11-2020",
+        "remarks": "—"
+      }
+    ],
+    "confidence": {
+      "crc_number": 1,
+      "applicant_name": 1,
+      "applicant_cnic_number": 0,
+      "father_name": 0,
+      "father_cnic_number": 0,
+      "mother_name": 0,
+      "mother_cnic_number": 0,
+      "children": [
+        {
+          "serial_number": 1,
+          "child_name": 1,
+          "child_registration_number": 1,
+          "gender_relation": 1,
+          "date_of_birth": 1,
+          "remarks": 1
+        }
+      ]
+    },
+    "_column_headers_read": {
+      "col1": "نمبر شمار",
+      "col2": "والد کا نام اور شناختی کارڈ نمبر",
+      "col3": "والدہ کا نام اور شناختی کارڈ نمبر",
+      "col4": "جنس / رشتہ",
+      "col5": "تاریخ پیدائش",
+      "col6": "معذوری",
+      "col7": "درخواست دیندہ کا نام"
+    },
+    "_consistency_check": {
+      "applicant_cnic_matches_father_cnic": false,
+      "applicant_cnic_read": "99301-8555555-5",
+      "father_cnic_read": "99302-7666666-6"
+    },
+    "_raw_father_name_urdu": "پرواز حسین شاہ",
+    "_raw_mother_name_urdu": "یاس پرواز",
+    "_raw_child_names_urdu": [
+      "م جبین پرواز"
+    ],
+    "_column_corrections": [
+      "FLAG applicant_cnic_number/father_cnic_number: model's consistency check reports these differ; applicant's relationship to the child is not independently established — neither value can be assumed correct without source-document verification (NEEDS_REVIEW)",
+      "FLAG mother_cnic_number: value '99-2024-555555' is not a valid CNIC; postprocessor will not reconstruct missing digits from per-row data or another CNIC (NEEDS_REVIEW)",
+      "FLAG mother_name: 'یاس پرواز' does not match transliteration of _raw_mother_name_urdu ('یاس پرواز' → 'Yas Parwaz', similarity 0.11); likely hallucinated (NEEDS_REVIEW)",
+      "FLAG father_name: 'پرواز حسین شاہ' does not match transliteration of _raw_father_name_urdu ('پرواز حسین شاہ' → 'Parwaz Hussain Shah', similarity 0.12); likely hallucinated (NEEDS_REVIEW)"
+    ]
+  },
+  "validated": {
+    "crc_number": "TEST-C-2024-99",
+    "applicant_name": "م جبین پرواز",
+    "applicant_cnic_number": "99301-8555555-5",
+    "father_name": "پرواز حسین شاہ",
+    "father_cnic_number": "99302-7666666-6",
+    "mother_name": "یاس پرواز",
+    "mother_cnic_number": "99-2024-555555",
+    "children": [
+      {
+        "serial_number": 1,
+        "child_name": "م جبین پرواز",
+        "child_registration_number": "99301-8555555-5",
+        "gender_relation": "بٹا",
+        "date_of_birth": "10-11-2020",
+        "remarks": "—"
+      }
+    ],
+    "confidence": {
+      "crc_number": 0,
+      "applicant_name": 1,
+      "applicant_cnic_number": 0,
+      "father_name": 0,
+      "father_cnic_number": 0,
+      "mother_name": 0,
+      "mother_cnic_number": 0,
+      "children": [
+        {
+          "serial_number": 1,
+          "child_name": 1,
+          "child_registration_number": 1,
+          "gender_relation": 1,
+          "date_of_birth": 1,
+          "remarks": 1
+        }
+      ]
+    },
+    "_column_headers_read": {
+      "col1": "نمبر شمار",
+      "col2": "والد کا نام اور شناختی کارڈ نمبر",
+      "col3": "والدہ کا نام اور شناختی کارڈ نمبر",
+      "col4": "جنس / رشتہ",
+      "col5": "تاریخ پیدائش",
+      "col6": "معذوری",
+      "col7": "درخواست دیندہ کا نام"
+    },
+    "_consistency_check": {
+      "applicant_cnic_matches_father_cnic": false,
+      "applicant_cnic_read": "99301-8555555-5",
+      "father_cnic_read": "99302-7666666-6"
+    },
+    "_raw_father_name_urdu": "پرواز حسین شاہ",
+    "_raw_mother_name_urdu": "یاس پرواز",
+    "_raw_child_names_urdu": [
+      "م جبین پرواز"
+    ],
+    "_column_corrections": [
+      "FLAG applicant_cnic_number/father_cnic_number: model's consistency check reports these differ; applicant's relationship to the child is not independently established — neither value can be assumed correct without source-document verification (NEEDS_REVIEW)",
+      "FLAG mother_cnic_number: value '99-2024-555555' is not a valid CNIC; postprocessor will not reconstruct missing digits from per-row data or another CNIC (NEEDS_REVIEW)",
+      "FLAG mother_name: 'یاس پرواز' does not match transliteration of _raw_mother_name_urdu ('یاس پرواز' → 'Yas Parwaz', similarity 0.11); likely hallucinated (NEEDS_REVIEW)",
+      "FLAG father_name: 'پرواز حسین شاہ' does not match transliteration of _raw_father_name_urdu ('پرواز حسین شاہ' → 'Parwaz Hussain Shah', similarity 0.12); likely hallucinated (NEEDS_REVIEW)"
+    ],
+    "_validation_errors": [
+      {
+        "field": "crc_number",
+        "error": "Registration number must contain only digits and dashes (got 'TEST-C-2024-99')",
+        "raw_value": "TEST-C-2024-99"
+      },
+      {
+        "field": "mother_cnic_number",
+        "error": "CNIC must be in format XXXXX-XXXXXXX-X (got '99-2024-555555')",
+        "raw_value": "99-2024-555555"
+      },
+      {
+        "field": "applicant_cnic_number",
+        "error": "FLAG applicant_cnic_number/father_cnic_number: model's consistency check reports these differ; applicant's relationship to the child is not independently established — neither value can be assumed correct without source-document verification (NEEDS_REVIEW)",
+        "raw_value": "99301-8555555-5"
+      },
+      {
+        "field": "father_cnic_number",
+        "error": "FLAG applicant_cnic_number/father_cnic_number: model's consistency check reports these differ; applicant's relationship to the child is not independently established — neither value can be assumed correct without source-document verification (NEEDS_REVIEW)",
+        "raw_value": "99302-7666666-6"
+      },
+      {
+        "field": "mother_cnic_number",
+        "error": "FLAG mother_cnic_number: value '99-2024-555555' is not a valid CNIC; postprocessor will not reconstruct missing digits from per-row data or another CNIC (NEEDS_REVIEW)",
+        "raw_value": "99-2024-555555"
+      },
+      {
+        "field": "mother_name",
+        "error": "FLAG mother_name: 'یاس پرواز' does not match transliteration of _raw_mother_name_urdu ('یاس پرواز' → 'Yas Parwaz', similarity 0.11); likely hallucinated (NEEDS_REVIEW)",
+        "raw_value": "یاس پرواز"
+      },
+      {
+        "field": "father_name",
+        "error": "FLAG father_name: 'پرواز حسین شاہ' does not match transliteration of _raw_father_name_urdu ('پرواز حسین شاہ' → 'Parwaz Hussain Shah', similarity 0.12); likely hallucinated (NEEDS_REVIEW)",
+        "raw_value": "پرواز حسین شاہ"
+      }
+    ]
+  }
+}
