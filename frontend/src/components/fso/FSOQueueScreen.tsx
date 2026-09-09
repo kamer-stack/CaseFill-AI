@@ -161,31 +161,33 @@ export const FSOQueueScreen: React.FC<FSOQueueScreenProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            {isDualLanguage ? 'تصدیقی قطار' : 'Verification Queue'}
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            {user.name} &bull; {user.badge || 'FSO Officer'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={loadCases}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
-            onClick={onStartIntake}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>{isDualLanguage ? 'نیا اندراج شروع کریں' : 'Start New Intake'}</span>
-          </button>
+      {/* Header — sticky under the main nav bar */}
+      <div className="sticky top-16 z-30 -mt-2 pt-2 pb-3 bg-brand-surface/95 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 truncate">
+              {isDualLanguage ? 'تصدیقی قطار' : 'Verification Queue'}
+            </h1>
+            <p className="text-sm text-neutral-600 mt-0.5 truncate">
+              {user.name} &bull; {user.badge || 'FSO Officer'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={loadCases}
+              className="p-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-neutral-600 transition-colors cursor-pointer"
+              title="Refresh"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={onStartIntake}
+              className="flex-1 sm:flex-none justify-center px-5 py-2.5 bg-brand hover:bg-brand-dark text-white font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{isDualLanguage ? 'نیا اندراج شروع کریں' : 'Start New Intake'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -807,13 +809,17 @@ function CaseDetailView({
 }
 
 // ── Status Icon ────────────────────────────────────────────────────────────
-
 function StatusIcon({ status }: { status: string }) {
-  switch (status) {
-    case 'pending_verification': return <Clock className="w-5 h-5 text-blue-500" />;
-    case 'verified': return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-    case 'flagged': return <AlertTriangle className="w-5 h-5 text-amber-500" />;
-    case 'rejected': return <XCircle className="w-5 h-5 text-rose-500" />;
-    default: return <FileText className="w-5 h-5 text-slate-400" />;
-  }
+  const map: Record<string, { icon: React.ReactNode; wrap: string }> = {
+    pending_verification: { icon: <Clock className="w-4 h-4" />, wrap: 'bg-case-pending/10 text-case-pending' },
+    verified: { icon: <CheckCircle2 className="w-4 h-4" />, wrap: 'bg-case-verified/10 text-case-verified' },
+    flagged: { icon: <AlertTriangle className="w-4 h-4" />, wrap: 'bg-case-flagged/10 text-case-flagged' },
+    rejected: { icon: <XCircle className="w-4 h-4" />, wrap: 'bg-case-rejected/10 text-case-rejected' },
+  };
+  const entry = map[status] || { icon: <FileText className="w-4 h-4" />, wrap: 'bg-neutral-100 text-neutral-400' };
+  return (
+    <span className={`w-9 h-9 rounded-full flex items-center justify-center ring-1 ring-inset ring-black/5 ${entry.wrap}`}>
+      {entry.icon}
+    </span>
+  );
 }

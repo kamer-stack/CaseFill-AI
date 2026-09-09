@@ -1,3 +1,0 @@
-"""
-CaseFill-AI Backend Package
-"""

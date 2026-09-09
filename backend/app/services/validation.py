@@ -329,6 +329,13 @@ def validate_extraction(document_type: str, data: dict) -> dict:
             # (if either) is correct without source-document verification.
             flag("applicant_cnic_number", data.get("applicant_cnic_number"), corr)
             flag("father_cnic_number", data.get("father_cnic_number"), corr)
+        elif "FLAG father_cnic_number/mother_cnic_number" in corr:
+            # Compound flag from the applicant-name/CNIC-pairing cross-check
+            # (added below in postprocess_bform): surface on BOTH parent CNIC
+            # fields since the pipeline cannot determine which value belongs
+            # to which parent without source-document verification.
+            flag("father_cnic_number", data.get("father_cnic_number"), corr)
+            flag("mother_cnic_number", data.get("mother_cnic_number"), corr)
         elif "FLAG father_cnic_number" in corr:
             flag("father_cnic_number", data.get("father_cnic_number"), corr)
         elif "FLAG mother_cnic_number" in corr:
@@ -357,6 +364,11 @@ def validate_extraction(document_type: str, data: dict) -> dict:
                 child_row = (data.get("children") or [None])[idx:idx + 1]
                 row_val = child_row[0].get("child_registration_number") if child_row and isinstance(child_row[0], dict) else None
                 flag(f"children.{idx}.child_registration_number", row_val, corr)
+        elif corr.startswith("Corrected"):
+            # CNIC digit-group reversal auto-fix (added in postprocess_bform):
+            # informational only — the value was already deterministically
+            # corrected, not flagged for review, so no confidence zeroing here.
+            pass
 
     # Surface CNIC-document flags (item 5 routing mix-up, etc.)
     for corr in data.get("_cnic_corrections", []):
@@ -380,6 +392,18 @@ def validate_extraction(document_type: str, data: dict) -> dict:
 # postprocess_cnic (cnic_number on standalone CNIC documents).
 _CNIC_CONFIDENCE_FLOOR = 0.8
 
+# Similarity threshold for the applicant/parent name-pairing cross-check
+# below. Reuses the same threshold already used elsewhere in this file
+# (Rule E transliteration checks) for consistency.
+_NAME_PAIRING_SIMILARITY_THRESHOLD = 0.6
+
+
+def _names_are_similar(a: str, b: str) -> bool:
+    """Case-insensitive fuzzy match, used only by the CNIC-name pairing check."""
+    if not a or not b:
+        return False
+    return SequenceMatcher(None, a.strip().lower(), b.strip().lower()).ratio() >= _NAME_PAIRING_SIMILARITY_THRESHOLD
+
 
 # ─── B-form post-processing (column-swap correction) ────────────────────────
 
@@ -399,6 +423,11 @@ def postprocess_bform(result: dict, raw_model_text: str = "") -> dict:
     NOT reconstruct missing parent CNICs from per-row values or guess
     which parent slot a misplaced constant belongs to.
 
+      * CNIC digit-group reversal auto-fix: if a CNIC field's 3 dash-
+        separated groups, when reversed, form a well-formatted CNIC, the
+        field is corrected automatically. This is deterministic and
+        information-preserving (no digits invented, only reordered), so
+        it is safe to auto-correct rather than merely flag.
       * Rule E check: mother_name must appear verbatim — either as the
         transliterated Roman string or as the model's own Urdu echo
         (_raw_mother_name_urdu) — somewhere in the raw model response. If
@@ -413,12 +442,48 @@ def postprocess_bform(result: dict, raw_model_text: str = "") -> dict:
         matches a parent's CNIC number on the same case, that is a
         contamination signal independent of the swap detection above.
         Confidence is forced to 0 and the field flagged NEEDS_REVIEW.
+      * Applicant/parent CNIC-name pairing cross-check: if applicant_name
+        matches mother_name (not father_name) but applicant_cnic_number
+        matches father_cnic_number (not mother_cnic_number) — or the
+        symmetric case — the father/mother CNIC fields were likely
+        swapped between the correctly-assigned name slots. Flagged only;
+        the postprocessor does NOT auto-swap the CNIC values, since it
+        cannot independently confirm which CNIC belongs to which parent
+        without the source document.
     """
     children = result.get("children", [])
     if not isinstance(children, list):
         children = []
 
     corrections: list[str] = []
+
+    # ── CNIC digit-group reversal auto-fix ──
+    # Some extractions reverse the 3 dash-separated groups of a CNIC (e.g.
+    # "0-3544297-37405" instead of "37405-3544297-0"). If reversing the
+    # groups produces a value that matches CNIC_RE, this is a deterministic,
+    # information-preserving fix — no digits are invented, only reordered —
+    # so it is safe to auto-correct here rather than only flag. This runs
+    # first so downstream checks (swap detection, recalibration) see the
+    # corrected value.
+    for _cnic_field in ("father_cnic_number", "mother_cnic_number", "applicant_cnic_number"):
+        _original_val = result.get(_cnic_field)
+        if not _original_val:
+            continue
+        _original_str = str(_original_val).strip()
+        if CNIC_RE.match(_original_str):
+            continue  # already well-formed, nothing to fix
+        _parts = _original_str.split("-")
+        if len(_parts) == 3:
+            _reversed_str = "-".join(reversed(_parts))
+            if CNIC_RE.match(_reversed_str):
+                result[_cnic_field] = _reversed_str
+                corrections.append(
+                    f"Corrected {_cnic_field}: segment order was reversed "
+                    f"('{_original_str}' → '{_reversed_str}')"
+                )
+                _early_conf = result.get("confidence")
+                if isinstance(_early_conf, dict):
+                    _early_conf[_cnic_field] = 0.7
 
     def _cnic(value) -> bool:
         return bool(CNIC_RE.match(str(value or "")))
@@ -566,7 +631,7 @@ def postprocess_bform(result: dict, raw_model_text: str = "") -> dict:
     conf = result.get("confidence")
     if isinstance(conf, dict):
         for correction in corrections:
-            if correction.startswith(("Swapped", "Corrected")):
+            if correction.startswith("Swapped"):
                 # A clean swap: both the parent slot and the child reg# slot were recovered
                 for parent_field in ("father_cnic_number", "mother_cnic_number"):
                     if parent_field in correction:
@@ -576,6 +641,10 @@ def postprocess_bform(result: dict, raw_model_text: str = "") -> dict:
                     for cc in child_conf:
                         if isinstance(cc, dict):
                             cc["child_registration_number"] = 0.5
+            elif correction.startswith("Corrected"):
+                # CNIC digit-group reversal — confidence already set to 0.7
+                # above at the point of correction; nothing further to do here.
+                pass
             elif correction.startswith("Recovered"):
                 # Keep the source value unchanged and lower confidence only for recovered fields.
                 for field in (
@@ -739,6 +808,69 @@ def postprocess_bform(result: dict, raw_model_text: str = "") -> dict:
                     if isinstance(child_conf, list) and 0 <= i < len(child_conf):
                         if isinstance(child_conf[i], dict):
                             child_conf[i]["child_registration_number"] = 0
+
+    # ── Applicant/parent CNIC-name pairing cross-check (flag only) ──
+    # Distinct failure mode from Rule E above: names can be assigned to the
+    # correct parent slot (father_name is really the father, mother_name is
+    # really the mother) while the CNIC NUMBERS were swapped between those
+    # two slots. Rule E only checks a name against its own row's Urdu echo
+    # and would not catch this, because the names themselves are correct.
+    #
+    # Signal: the applicant is almost always one specific parent. If
+    # applicant_name clearly matches one parent's name but
+    # applicant_cnic_number matches the OTHER parent's CNIC, the two parent
+    # CNIC fields were likely swapped. This never auto-swaps the values —
+    # only flags both parent CNIC fields for FSO review, since the pipeline
+    # cannot independently confirm which CNIC belongs to which parent
+    # without the source document.
+    applicant_name_val = str(result.get("applicant_name") or "").strip()
+    father_name_val = str(result.get("father_name") or "").strip()
+    mother_name_val = str(result.get("mother_name") or "").strip()
+    applicant_cnic_val = str(result.get("applicant_cnic_number") or "").strip()
+    father_cnic_val = str(result.get("father_cnic_number") or "").strip()
+    mother_cnic_val = str(result.get("mother_cnic_number") or "").strip()
+
+    if applicant_name_val and father_name_val and mother_name_val and applicant_cnic_val:
+        applicant_matches_mother = _names_are_similar(applicant_name_val, mother_name_val)
+        applicant_matches_father = _names_are_similar(applicant_name_val, father_name_val)
+
+        pairing_flag_fired = False
+
+        if (
+            applicant_matches_mother
+            and not applicant_matches_father
+            and father_cnic_val
+            and applicant_cnic_val == father_cnic_val
+            and mother_cnic_val
+            and applicant_cnic_val != mother_cnic_val
+        ):
+            corrections.append(
+                "FLAG father_cnic_number/mother_cnic_number: applicant_name "
+                "matches mother_name but applicant_cnic_number matches "
+                "father_cnic_number — possible father/mother CNIC swap; "
+                "verify against source document (NEEDS_REVIEW)"
+            )
+            pairing_flag_fired = True
+
+        elif (
+            applicant_matches_father
+            and not applicant_matches_mother
+            and mother_cnic_val
+            and applicant_cnic_val == mother_cnic_val
+            and father_cnic_val
+            and applicant_cnic_val != father_cnic_val
+        ):
+            corrections.append(
+                "FLAG father_cnic_number/mother_cnic_number: applicant_name "
+                "matches father_name but applicant_cnic_number matches "
+                "mother_cnic_number — possible father/mother CNIC swap; "
+                "verify against source document (NEEDS_REVIEW)"
+            )
+            pairing_flag_fired = True
+
+        if pairing_flag_fired and isinstance(conf, dict):
+            conf["father_cnic_number"] = 0
+            conf["mother_cnic_number"] = 0
 
     # ── B-form CNIC confidence recalibration ──
     # The model routinely emits hedged 0.5 scores for correctly-read CNICs
